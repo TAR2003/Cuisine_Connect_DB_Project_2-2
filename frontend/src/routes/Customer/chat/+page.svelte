@@ -22,7 +22,7 @@
 			if (lastMessage) lastMessage.scrollIntoView({ behavior: 'smooth' });
 		}
 	}
-	afterUpdate(() => {
+	afterUpdate(async () => {
 		scrollToBottom();
 	});
 
@@ -32,11 +32,19 @@
 		input = '';
 		allmessages = await getmessages(userid, msgid);
 	}
+	async function hadleupperclick() {
+		allmessages = await getmessages(userid, msgid);
+		scrollToBottom();
+	}
+	async function hadleupperclick2(event) {
+		allmessages = await getmessages(userid, msgid);
+		scrollToBottom();
+	}
 </script>
 
 {#if allmessages}
 	<p>{msgid} is the inbox</p>
-	<div class="upper" bind:this={messageContainer}>
+	<div class="upper" bind:this={messageContainer} on:dblclick={hadleupperclick}>
 		{#each allmessages as a}
 			<div class="c">
 				{#if a[0] == msgid}
@@ -62,7 +70,13 @@
 		{/each}
 	</div>
 	<div class="text">
-		<input type="text" bind:value={input} placeholder="Type your messages here" class="i" />
+		<input
+			type="text"
+			bind:value={input}
+			placeholder="Type your messages here"
+			class="i"
+			on:input={hadleupperclick2}
+		/>
 		<button class="send" on:click={handleinsertion}>click to send</button>
 	</div>
 {/if}
