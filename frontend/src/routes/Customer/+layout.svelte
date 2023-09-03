@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import ConfirmationModal from './ConfirmationModal.svelte';
 	import Newpost from './newpost.svelte';
-	import { getprofilepicture } from '../../functions';
+	import { findname, findusername, getprofilepicture } from '../../functions';
 	let username = Cookies.get('username');
 	let userid = Cookies.get('userid');
 	let searchInput = '';
@@ -48,6 +48,19 @@
 		Cookies.set('profileid', userid);
 		window.location.href = '/Customer/myfriends';
 	}
+	function handlesearchclick(elem) {
+		Cookies.set('userprofile', elem[0]);
+		searchInput = '';
+		window.location.href = '/Customer/profile';
+	}
+	async function getsearchvalues() {
+		if (searchInput.length > 0) {
+			if (searchInput[0] == '@') {
+				suggestions = await findusername(searchInput);
+			} else suggestions = await findname(searchInput);
+		}
+	}
+	console.log('searchinput -> ' + suggestions);
 </script>
 
 <div class="top">
@@ -63,6 +76,7 @@
 				class="search"
 				placeholder="search for anything"
 				bind:value={searchInput}
+				on:input={getsearchvalues}
 			/>
 		</div>
 	</div>
@@ -94,9 +108,18 @@
 	{#if searchInput}
 		<ul class="suggestions">
 			{#each suggestions as suggestion}
-				{#if suggestion.toLowerCase().includes(searchInput.toLowerCase())}
-					<li>{suggestion}</li>
-				{/if}
+				<li on:click={() => handlesearchclick(suggestion)}>
+					<div class="inlist">
+						<div class="leftlist">
+							<img class="searchimage" src={suggestion[4]} />
+						</div>
+						<div class="midlist">
+							<div class="t">{suggestion[2]}</div>
+							<div class="l">{suggestion[1]}</div>
+						</div>
+						<div class="rightlist">{suggestion[3]}</div>
+					</div>
+				</li>
 			{/each}
 		</ul>
 	{/if}
@@ -134,6 +157,40 @@
 </div>
 
 <style>
+	.leftlist {
+		width: 80px;
+	}
+	.midlist {
+		display: flex;
+		flex-direction: column;
+		justify-content: left;
+		width: 270px;
+		margin: 0%;
+	}
+	.t,
+	.l {
+		padding-left: 20px;
+		justify-content: left;
+		text-align: left;
+	}
+	.t {
+		font-size: 30px;
+	}
+	.l {
+		color: aqua;
+	}
+	.rightlist {
+		justify-content: center;
+	}
+	.inlist {
+		display: flex;
+		flex-direction: row;
+	}
+	.searchimage {
+		max-width: 70px;
+		max-height: 70px;
+		border-radius: 100%;
+	}
 	.mainname {
 		color: white;
 		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
@@ -336,12 +393,17 @@
 		list-style-type: none;
 		padding: 0;
 		width: 240px;
-		margin-left: 150px;
+		margin-left: 110px;
 		margin-top: 0%;
 	}
 	li {
 		cursor: pointer;
-		padding: 0.5rem;
+		padding: 10px;
+		height: 70px;
+		margin-bottom: 30px;
+		border: 1px solid white;
+		margin: 0%;
+		font-size: 25px;
 	}
 	.r {
 		position: relative;
@@ -351,7 +413,7 @@
 		position: absolute;
 		top: 100%; /* Position the suggestions list below the input */
 		left: 0;
-		width: 320px;
+		width: 420px;
 		max-height: 700px;
 		margin-top: 0%;
 		background-color: rgb(58, 57, 57);

@@ -9,9 +9,7 @@
 	let email = '';
 	let mobileno = '';
 
-	async function handleInputChange(event) {
-		userinput = event.target.value;
-
+	async function handleInputChange() {
 		if ((await checkunique()) == 'false') {
 			alertstring = 'OK, you can have this username';
 		} else {
@@ -21,13 +19,12 @@
 			alertstring = 'Noo you can not have this usernmae';
 			return;
 		}
-		console.log(userparam);
 	}
 
 	async function checkunique() {
 		let s = {
 			title: 'checkusername',
-			username: userparam
+			username: '@' + userinput
 		};
 		try {
 			const response = await fetch('http://localhost:3001/api/username', {
