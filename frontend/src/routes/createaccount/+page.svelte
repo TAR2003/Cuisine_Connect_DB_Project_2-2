@@ -1,4 +1,5 @@
 <script>
+	import { goto } from '$app/navigation';
 	import Map from './Map.svelte';
 	import Cookies from 'js-cookie';
 	let userinput = '';
@@ -97,12 +98,10 @@
 			console.log(!isReady());
 			const usertype = selectedOption[0];
 			Cookies.set('usertype', usertype);
-			Cookies.set('username', userparam);
+			Cookies.set('username', '@' + userinput);
 			let id1 = await getID(userparam);
 			Cookies.set('userid', id1);
-			if (usertype == 'C') window.location.href = '/Customer';
-			else if (usertype == 'R') window.location.href = '/Restaurant';
-			else window.location.href = '/Page';
+			goto('/user');
 		}
 	}
 

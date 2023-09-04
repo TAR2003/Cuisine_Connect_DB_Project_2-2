@@ -1,11 +1,15 @@
 <script>
 	import Cookies from 'js-cookie';
+	import { goto } from '$app/navigation';
 	import { findUserType, getAuthentication, getID } from '../../functions';
+	import { onDestroy } from 'svelte';
 
 	let savedUsername = '';
 	let username = '';
 	let password = '';
 	let showredborder = false;
+
+	onDestroy(() => {});
 
 	async function onButtonclick() {
 		console.log(username + ' ' + password);
@@ -20,9 +24,7 @@
 			Cookies.set('usertype', usertype);
 			let id1 = await getID('@' + username);
 			Cookies.set('userid', id1);
-			if (usertype == 'C') window.location.href = '/Customer';
-			else if (usertype == 'R') window.location.href = '/Restaurant';
-			else window.location.href = '/Page';
+			goto('/user');
 		}
 		console.log(v);
 	}
