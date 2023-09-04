@@ -61,6 +61,9 @@
 			} else suggestions = await findname(searchInput);
 		}
 	}
+	async function gotofollowedrestaurants() {
+		window.location.href = `/user/followedrestaurants/${userid}`;
+	}
 	console.log('searchinput -> ' + suggestions);
 </script>
 
@@ -86,12 +89,13 @@
 		<div class="homeclass">
 			<a href="/user"><p class="Home">Home</p></a>
 		</div>
-		<div class="homeclass">
-			<a href="/user/friendrequests"><p class="Home">Friend Requests</p></a>
-		</div>
-		<div class="homeclass">
-			<a href="/user/nearbyrestaurants"><p class="Home">Nearby Restaurants</p></a>
-		</div>
+		{#if Cookies.get('usertype') == 'C'}<div class="homeclass">
+				<a href="/user/friendrequests"><p class="Home">Friend Requests</p></a>
+			</div>{/if}
+		{#if Cookies.get('usertype') != 'R'}<div class="homeclass">
+				<a href="/user/nearbyrestaurants"><p class="Home">Nearby Restaurants</p></a>
+			</div>{/if}
+
 		<div class="homeclass">
 			<a href="/user/orders"><p class="Home">Orders</p></a>
 		</div>
@@ -129,12 +133,19 @@
 	<div class="leftbar">
 		<button class="mainbutton" on:click={handleprofilepictureclick}
 			>{#if userinfo != null}<img class="profilephoto" src={userinfo[11]} alt="" />
-				<p class="mainname">{userinfo[2]}</p>{/if}
+				<div class="superdivclass">
+					<p class="mainname">{userinfo[2]}</p>
+					<p class="uname">{userinfo[1]}</p>
+				</div>
+			{/if}
 		</button>
-		<button class="samebuttons" on:click={showfriends}>My Friends</button>
-		<button class="samebuttons">My Restaurants</button>
+		{#if Cookies.get('usertype') == 'C'}<button class="samebuttons" on:click={showfriends}
+				>My Friends</button
+			>{/if}
+
+		<button class="samebuttons" on:click={gotofollowedrestaurants}>My Followed Restaurants</button>
 		<button class="samebuttons">My Foodie Pages</button>
-		<button class="samebuttons">Resevvations</button>
+		<button class="samebuttons">Reservations</button>
 		<button class="samebuttons">{username}</button>
 		<button class="samebuttons">{username}</button>
 	</div>
@@ -145,7 +156,6 @@
 		<button class="samebuttonsright">Deactivate</button>
 		<button class="samebuttonsright">Delete Account</button>
 		<button class="samebuttonsright" on:click={handlenewpostclick}>New Post</button>
-		<button class="samebuttonsright">New Review Post</button>
 	</div>
 	<ConfirmationModal
 		visible={isLogoutModalVisible}
@@ -157,6 +167,12 @@
 </div>
 
 <style>
+	.uname {
+		font-size: 15px;
+		margin-top: 10px;
+		padding-left: 20px;
+	}
+
 	.leftlist {
 		width: 80px;
 	}
@@ -195,8 +211,10 @@
 		color: white;
 		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
 			Geneva, Verdana, sans-serif;
-		font-size: 30px;
-		padding-left: 10px;
+		font-size: 25px;
+		padding-left: 15px;
+		margin-top: 15px;
+		margin-bottom: 0%;
 	}
 	.mainbutton {
 		width: 500px;
@@ -207,7 +225,7 @@
 			Geneva, Verdana, sans-serif;
 		font-size: 25px;
 		text-align: left;
-		padding-left: 100px;
+		padding-left: 40px;
 		margin-bottom: 15px;
 		display: flex;
 	}
@@ -246,7 +264,7 @@
 			Geneva, Verdana, sans-serif;
 		font-size: 25px;
 		text-align: left;
-		padding-left: 100px;
+		padding-left: 40px;
 		margin-bottom: 15px;
 	}
 	.samebuttons:hover {
@@ -424,5 +442,13 @@
 		text-align: center;
 		font-size: 30px;
 		overflow-y: scroll;
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
 	}
 </style>

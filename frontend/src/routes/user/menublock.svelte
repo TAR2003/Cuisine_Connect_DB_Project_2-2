@@ -32,10 +32,12 @@
 		<h2>From the Restaurant</h2>
 		<div class="picandname">
 			<img src={menuinfo[0][20]} class="posterpic" alt="failed image" />
-			<p class="personname">{menuinfo[0][11]}</p>
+			<div class="superdivlcass">
+				<p class="personname">{menuinfo[0][11]}</p>
+				<a on:click={gotorestaurantprofile}><p class="personusername">{menuinfo[0][10]}</p></a>
+			</div>
 		</div>
 
-		<a on:click={gotorestaurantprofile}><p class="personusername">{menuinfo[0][10]}</p></a>
 		<div class="lower">
 			<p class="t">Average Rating: {menuinfo[0][4]}</p>
 			<p class="t">Price: ${menuinfo[0][3]}</p>
@@ -95,15 +97,25 @@
 	}
 	.personusername {
 		font-family: Arial, Helvetica, sans-serif;
-		margin-left: 110px;
+		margin-left: 20px;
 		color: aqua;
 		justify-content: left;
 		text-align: left;
+		margin-top: 0px;
 	}
 	.personname {
 		font-size: 33px;
 		font-family: 'Courier New', Courier, monospace;
 		font-weight: 800;
-		margin-left: 10px;
+		margin-left: 20px;
+		margin-bottom: 0px;
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
 	}
 </style>

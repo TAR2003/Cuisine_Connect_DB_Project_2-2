@@ -71,9 +71,12 @@
 	<div class="main">
 		<div class="picandname">
 			<img src={friendinfo[11]} alt="" class="pic" />
-			<h2>{friendinfo[2]}</h2>
+			<div class="superdivclass">
+				<h2>{friendinfo[2]}</h2>
+				<a on:click={gotoprofile}><p class="username">{friendinfo[1]}</p></a>
+			</div>
 		</div>
-		<a on:click={gotoprofile}><p class="username">{friendinfo[1]}</p></a>
+
 		{#if friendid != userid}
 			{#if friendshipstatus == 'no'}
 				<button on:click={givereq} class="friendbutton">Send Request</button>
@@ -88,6 +91,13 @@
 {/if}
 
 <style>
+	h2 {
+		margin-top: 10px;
+		margin-bottom: 0px;
+		font-size: 30px;
+		padding-left: 20px;
+		text-align: left;
+	}
 	.friendbutton {
 		width: 200px;
 		height: 50px;
@@ -98,8 +108,9 @@
 	}
 	.username {
 		text-align: left;
-		margin-left: 20px;
+		padding-left: 20px;
 		font-size: 20px;
+		margin-top: 0px;
 	}
 	.pic {
 		max-width: 80px;
@@ -114,9 +125,17 @@
 	.main {
 		border: 1px solid white;
 		width: 700px;
-		height: 200px;
+		height: 150px;
 		align-self: center;
 		margin-left: 80px;
 		margin-bottom: 30px;
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
 	}
 </style>

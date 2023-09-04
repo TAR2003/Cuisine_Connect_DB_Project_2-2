@@ -1,3 +1,7 @@
+<script>
+	import './global.css';
+</script>
+
 <svelte:head>
 	<title>CuisineConnect</title>
 	<meta name="description" content="Svelte demo app" />
@@ -18,5 +22,13 @@
 		width: 1900px;
 		border: 1px solid red;
 		flex: 1;
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
 	}
 </style>

@@ -13,7 +13,9 @@
 		getcomments,
 		getpostinfo,
 		getuserinfoid,
-		getreviewpost
+		getreviewpost,
+		deletepost,
+		deletecomment
 	} from '../../functions';
 	import { goto } from '$app/navigation';
 	export let postid;
@@ -102,6 +104,14 @@
 	function gotomenuprofile() {
 		window.location.href = `/user/singleblock/${'menu'}/${reviewinfo[0][0]}`;
 	}
+	async function gotodelete() {
+		await deletepost(postid);
+		location.reload();
+	}
+	async function gotodeletecomment(commentid) {
+		await deletecomment(commentid);
+		updatecomment();
+	}
 	function f() {}
 </script>
 
@@ -110,10 +120,22 @@
 		<div class="mainshare">
 			<div class="picandname">
 				<img src={posterinfo[11]} class="posterpic" alt="failed image" />
-				<p class="personname" has shared a post>{posterinfo[2]}</p>
+				<div class="superdivclass">
+					<p class="personname">{posterinfo[2]}</p>
+					<a on:click={gotoprofile}><p class="personusername">{posterinfo[1]}</p></a>
+				</div>
+
 				<p class="sharedpost">has shared a post</p>
 			</div>
-			<a on:click={gotoprofile}><p class="personusername">{posterinfo[1]}</p></a>
+			<div class="rightshift">
+				{#if year != null}
+					<p class="dateformat">
+						Shared on: {day}/{month}/{year} at {hours}:{minutes}:{seconds}
+					</p>{/if}
+				{#if userid == postinfo[1]}
+					<button class="deletepost1" on:click={gotodelete}>Delete Post</button>
+				{/if}
+			</div>
 		</div>
 		<Post postid={shareoriginal} />
 	{:else}
@@ -121,10 +143,12 @@
 			<div class="topbar">
 				<div class="picandname">
 					<img src={posterinfo[11]} class="posterpic" alt="failed image" />
-					<p class="personname">{posterinfo[2]}</p>
+					<div class="superdivclass">
+						<p class="personname">{posterinfo[2]}</p>
+						<a on:click={gotoprofile}><p class="personusername">{posterinfo[1]}</p></a>
+					</div>
 				</div>
 
-				<a on:click={gotoprofile}><p class="personusername">{posterinfo[1]}</p></a>
 				{#if reviewinfo}
 					<h2>
 						reviewed the menu <a on:click={gotomenuprofile}>{reviewinfo[0][6]}</a>
@@ -132,17 +156,22 @@
 					<h2>From the Restaurant</h2>
 					<div class="picandname">
 						<img src={reviewinfo[0][24]} class="posterpic" alt="failed image" />
-						<p class="personname">{reviewinfo[0][15]}</p>
+						<div class="superdivclass">
+							<p class="personname">{reviewinfo[0][15]}</p>
+							<a on:click={gotorestaurantprofile}
+								><p class="personusername">{reviewinfo[0][14]}</p></a
+							>
+						</div>
 					</div>
-
-					<a on:click={gotorestaurantprofile}><p class="personusername">{reviewinfo[0][14]}</p></a>
-					<p>{reviewinfo[0][3]}</p>
 				{/if}
 				{#if year != null}
 					<p class="dateformat">
 						Last Updated on: {day}/{month}/{year} at {hours}:{minutes}:{seconds}
 					</p>{/if}
-				{#if userid == postinfo[1]} <button>click to edit post</button> {/if}
+				{#if userid == postinfo[1]}
+					<button>click to edit post</button>
+					<button class="deletepost2" on:click={gotodelete}>Delete Post</button>
+				{/if}
 			</div>
 
 			<div class="captionbar">
@@ -182,6 +211,9 @@
 				{#if showcomment == true}<div>
 						{#each comments as c}
 							<Comment userid={c[2]} caption={c[3]} time={c[4]} />
+							{#if userid == c[2]}
+								<button on:click={() => gotodeletecomment(c[0])}>Delete Comment</button>
+							{/if}
 						{/each}
 					</div>
 				{/if}
@@ -192,6 +224,27 @@
 {/if}
 
 <style>
+	.rightshift {
+		display: flex;
+		flex-direction: row;
+	}
+	.deletepost1 {
+		height: 20px;
+		align-items: right;
+		justify-content: right;
+		width: 100px;
+		align-self: right;
+		margin-top: 30px;
+		margin-left: 260px;
+	}
+	.deletepost2 {
+		height: 20px;
+		align-items: right;
+		justify-content: right;
+		width: 100px;
+		align-self: right;
+		margin-left: 470px;
+	}
 	.star-container {
 		display: flex;
 		align-items: center;
@@ -208,9 +261,9 @@
 		color: aqua;
 	}
 	.sharedpost {
-		font-size: 20px;
+		font-size: 25px;
 		justify-content: center;
-		margin-top: 37px;
+		margin-top: 27px;
 		margin-left: 20px;
 	}
 	.picandname {
@@ -249,12 +302,14 @@
 		align-self: left;
 		text-align: left;
 		margin-left: 90px;
+		padding-top: 10px;
+		padding-bottom: 15px;
 		margin-bottom: 0px;
 		display: flex;
 		flex-direction: column;
 		flex: 1;
 		background-color: black;
-		border-bottom: 1px solid white;
+		border-bottom: 3px solid white;
 		margin-bottom: 10px;
 	}
 	.showcomment {
@@ -353,13 +408,15 @@
 		font-family: Arial, Helvetica, sans-serif;
 		margin-left: 20px;
 		color: aqua;
+		margin-top: 0px;
 	}
 	.personname {
-		font-size: 33px;
+		font-size: 35px;
 		font-family: 'Courier New', Courier, monospace;
 		font-weight: 800;
-		margin-top: 30px;
-		margin-left: 10px;
+		margin-top: 20px;
+		margin-left: 20px;
+		margin-bottom: 0px;
 	}
 	.main {
 		width: 700px;
@@ -374,5 +431,13 @@
 	}
 	.topbar {
 		color: white;
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
 	}
 </style>

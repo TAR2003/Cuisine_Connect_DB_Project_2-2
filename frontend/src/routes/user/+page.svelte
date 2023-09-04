@@ -58,4 +58,12 @@
 		color: white;
 		font-size: 30px;
 	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
 </style>

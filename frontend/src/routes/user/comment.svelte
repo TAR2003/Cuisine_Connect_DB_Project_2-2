@@ -1,8 +1,9 @@
 <script>
 	import { onMount } from 'svelte';
-	import { getuserinfoid } from '../../functions';
+	import { deletecomment, getuserinfoid } from '../../functions';
 	import Cookies from 'js-cookie';
 	export let userid, caption, time;
+	let uid = Cookies.get('userid');
 	let arr = null;
 	let year, month, day, hours, minutes, seconds;
 	onMount(async () => {
@@ -26,10 +27,12 @@
 	<div class="main">
 		<div class="picandname">
 			<img src={arr[11]} alt="no image" class="pic" />
-			<p class="name">{arr[2]}</p>
+			<div class="superdivclass">
+				<p class="name">{arr[2]}</p>
+				<a on:click={gotoprofile} class="uname"><p class="username">{arr[1]}</p></a>
+			</div>
 		</div>
 
-		<a on:click={gotoprofile}><p class="username">{arr[1]}</p></a>
 		{#if year != null}
 			<p class="dateformat">
 				Last Updated on: {day}/{month}/{year} at {hours}:{minutes}:{seconds}
@@ -39,10 +42,15 @@
 {/if}
 
 <style>
+	.dateformat {
+		padding-left: 20px;
+	}
 	.captionclass {
 		background-color: black;
 		min-height: 40px;
 		justify-content: center;
+		padding: 1px;
+		margin: 0%;
 	}
 	.pic {
 		max-width: 60px;
@@ -52,22 +60,27 @@
 	.picandname {
 		display: flex;
 		flex-direction: row;
+		padding-left: 15px;
+		padding-top: 15px;
 	}
 	.username {
 		color: aqua;
 		margin-left: 30px;
 		font-size: 20px;
+		margin-top: 0px;
 	}
 	.name {
-		font-size: 20px;
+		font-size: 25px;
 		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-		margin-left: 20px;
+		margin-left: 30px;
+		margin-bottom: 0px;
+		margin-top: 0px;
 	}
 	.caption {
 		font-size: 20px;
 		font-family: Arial, Helvetica, sans-serif;
-		margin-left: 30px;
-		margin-top: 30px;
+		margin-left: 20px;
+		margin-top: 10px;
 		justify-content: center;
 	}
 	.main {
@@ -76,5 +89,13 @@
 		border: 1px solid rgb(255, 255, 255);
 		margin-bottom: 20px;
 		border-radius: 10px;
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
 	}
 </style>

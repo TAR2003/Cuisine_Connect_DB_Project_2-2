@@ -31,11 +31,12 @@
 		<div class="main">
 			<div class="picandname">
 				<img src={info[11]} alt="" class="pic" />
-
-				<h2>{info[2]}</h2>
+				<div class="superdivclass">
+					<h2>{info[2]}</h2>
+					<a on:click={gotoprofile}><p class="username">{info[1]}</p></a>
+				</div>
 			</div>
 			<div class="newflex">
-				<a on:click={gotoprofile}><p class="username">{info[1]}</p></a>
 				{#if followstatus == 0}
 					<button class="sbt" on:click={setflw}>Follow</button>
 				{:else}
@@ -47,23 +48,43 @@
 {/if}
 
 <style>
+	h2 {
+		margin-bottom: 0%;
+		margin-left: 20px;
+		text-align: left;
+		font-size: 30px;
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
 	.sbt {
 		width: 230px;
 		height: 50px;
 		margin-left: 80px;
 		font-size: 20px;
+		align-self: center;
+		justify-content: center;
+		text-align: center;
 	}
 	.newflex {
 		display: flex;
 		flex-direction: row;
+		text-align: center;
+		justify-content: center;
 	}
 	a {
 		color: aqua;
 	}
 	.username {
 		text-align: left;
-		margin-left: 20px;
 		font-size: 20px;
+		margin-left: 20px;
+		margin-top: 0px;
 	}
 	.pic {
 		max-width: 100px;
@@ -78,8 +99,7 @@
 	.main {
 		border: 1px solid white;
 		width: 700px;
-		height: 200px;
-		align-self: center;
+		height: 170px;
 		margin-left: 80px;
 		margin-bottom: 30px;
 	}

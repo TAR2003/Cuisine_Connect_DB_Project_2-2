@@ -91,4 +91,12 @@
 		background-color: black;
 		color: white;
 	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
 </style>

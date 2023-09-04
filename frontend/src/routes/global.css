@@ -1,0 +1,14 @@
+a {
+    text-decoration: none; 
+    cursor: pointer; 
+    color: aqua;
+}
+
+a:hover {
+    text-decoration: underline; 
+}
+
+.superdivclass {
+    display: flex;
+    flex-direction: column;
+}

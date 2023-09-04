@@ -5,6 +5,8 @@
 	import { page } from '$app/stores';
 	import {
 		acceptrequest,
+		addconnection,
+		connectionstatus,
 		deleterequest,
 		getallprofileposts,
 		getfollowstatus,
@@ -12,6 +14,7 @@
 		getrestaurantrating,
 		getuserinfoid,
 		giverequest,
+		removeconnection,
 		setfollow,
 		unfollow,
 		unfriend
@@ -33,11 +36,12 @@
 	let friendshipstring = '';
 	let followstatus = 0;
 	let rating = 0;
+	let pageconnection = 0;
 
 	onMount(async () => {
 		allposts = await getallprofileposts(userprofile);
 		profileinfo = await getuserinfoid(userprofile);
-		if (profileinfo[5] == 'C') {
+		if (profileinfo[5] == 'C' && Cookies.get('usertype') == 'C') {
 			if (userprofile != userid) {
 				showfriendsbutton = true;
 				friendshipstatus = await getfriendshipstatus(userid, userprofile);
@@ -54,6 +58,10 @@
 			followstatus = await getfollowstatus(userid, userprofile);
 			rating = await getrestaurantrating(userprofile);
 		}
+		if (profileinfo[5] == 'P') {
+			pageconnection = await connectionstatus(userid, userprofile);
+		}
+
 		console.log('since it then');
 		for (let i = 0; i < allposts.length; i++) {
 			posts[i] = allposts[i][0];
@@ -127,6 +135,19 @@
 	function gotofollowers() {
 		window.location.href = `/user/followerlist/${userprofile}`;
 	}
+	function gotofollowedrestaurants() {
+		window.location.href = `/user/followedrestaurants/${userprofile}`;
+	}
+	async function pageconnect() {
+		pageconnection = 1;
+		await addconnection(userid, userprofile);
+		console.log('clicked connect');
+	}
+	async function removepageconnet() {
+		pageconnection = 0;
+		await removeconnection(userid, userprofile);
+		console.log('clicked disconnect');
+	}
 </script>
 
 {#if profileinfo != null}
@@ -142,6 +163,7 @@
 	{:else if profileinfo[5] == 'R'}
 		<a on:click={gotofollowers}>Followers</a>
 	{/if}
+	<a on:click={gotofollowedrestaurants}>Following</a>
 	<a on:click={gotochat}>Message</a>
 
 	{#if profileinfo[5] == 'R'}
@@ -159,6 +181,15 @@
 				<button class="sbt" on:click={setflw}>Follow</button>
 			{:else}
 				<button class="sbt" on:click={unflw}>Unfollow</button>
+			{/if}
+		</div>
+	{/if}
+	{#if profileinfo[5] == 'P'}
+		<div>
+			{#if pageconnection == 0}
+				<button class="sbt" on:click={pageconnect}>Connect</button>
+			{:else}
+				<button class="sbt" on:click={removepageconnet}>Disconnect</button>
 			{/if}
 		</div>
 	{/if}
@@ -255,5 +286,13 @@
 		100% {
 			transform: rotate(360deg);
 		}
+	}
+	a {
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a:hover {
+		text-decoration: underline;
 	}
 </style>
