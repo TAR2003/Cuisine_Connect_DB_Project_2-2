@@ -215,7 +215,6 @@ app.post('/api/getcomment', async (req, res) => {
 app.post('/api/addcomment', async (req, res) => {
   const s = req.body;
   await addcomments(s.postid, s.userid, s.caption);
-  await addcommentno(s.postid);
   const data = '';
   res.json(data);
 });
@@ -440,6 +439,75 @@ app.post('/api/getfollowlist', async (req, res) => {
   const s = req.body;
   const userid1 = s.userid1;
   const data = await getfollowlist(userid1);
+  res.json(data);
+});
+
+app.post('/api/findusername', async (req, res) => {
+  const s = req.body;
+  const u = s.u;
+  const data = await findusername(u);
+  res.json(data);
+});
+
+app.post('/api/findname', async (req, res) => {
+  const s = req.body;
+  const u = s.u;
+  const data = await findname(u);
+  res.json(data);
+});
+
+app.post('/api/deletepost', async (req, res) => {
+  const s = req.body;
+  const postid = s.postid;
+  const data = '';
+  await deletepost(postid);
+  res.json(data);
+});
+
+app.post('/api/deletecomment', async (req, res) => {
+  const s = req.body;
+  const commentid = s.commentid;
+  const data = '';
+  await deletecomment(commentid);
+  res.json(data);
+});
+
+app.post('/api/getnearbyrestaurants', async (req, res) => {
+  const s = req.body;
+  const userid = s.userid;
+  const data = await getnearbyrestaurants(userid);
+  res.json(data);
+});
+
+app.post('/api/getfollowedrestaurants', async (req, res) => {
+  const s = req.body;
+  const userid = s.userid;
+  const data = await getfollowedrestaurants(userid);
+  res.json(data);
+});
+
+app.post('/api/connectionstatus', async (req, res) => {
+  const s = req.body;
+  const userid1 = s.userid1;
+  const userid2 = s.userid2;
+  const data = await connectionstatus(userid1, userid2);
+  res.json(data);
+});
+app.post('/api/addconnection', async (req, res) => {
+  const s = req.body;
+  const userid1 = s.userid1;
+  const userid2 = s.userid2;
+  const data = '';
+  await addconnection(userid1, userid2);
+  res.json(data);
+});
+
+app.post('/api/removeconnection', async (req, res) => {
+  const s = req.body;
+  const userid1 = s.userid1;
+  const userid2 = s.userid2;
+  const data = '';
+  await removeconnection(userid1, userid2);
   res.json(data);
 });
 
@@ -833,6 +901,7 @@ async function getUserinfoid(id1) {
       id1: id1
     }
     result = await connection.execute(sqlQuery, binds);
+    result = result.rows[0];
   } catch (err) {
     console.error('Error: ', err);
   } finally {
@@ -844,7 +913,9 @@ async function getUserinfoid(id1) {
       }
     }
   }
-  return result.rows[0];
+
+
+  return result;
 }
 
 async function getprofilepicture(id1) {
@@ -924,34 +995,6 @@ async function addcomments(postid, userid, caption) {
     }
   }
 }
-
-
-async function addcommentno(postid) {
-  let connection;
-  let result;
-  try {
-    connection = await oracledb.getConnection(dbConfig);
-    const sqlQuery = 'UPDATE POSTS SET COMMENT_COUNT = (COMMENT_COUNT + 1) WHERE POST_ID = :postid';
-    const binds = {
-      postid: postid,
-    }
-    let options = {
-      autoCommit: true
-    }
-    result = await connection.execute(sqlQuery, binds, options);
-  } catch (err) {
-    console.error('Error: ', err);
-  } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Error closing connection: ', err);
-      }
-    }
-  }
-}
-
 
 async function addnewpost(userid, photo, caption) {
   let connection;
@@ -1052,8 +1095,6 @@ async function removereact(postid, userid) {
       postid: postid
     }
     await connection.execute(sql, bind, options);
-
-
   } catch (err) {
     console.error('Error: ', err);
   } finally {
@@ -1081,11 +1122,6 @@ async function addreact(postid, userid) {
       autoCommit: true
     }
     result = await connection.execute(sqlQuery, binds, options);
-    const sql = `UPDATE POSTS SET REACT_COUNT = REACT_COUNT + 1 WHERE POST_ID = :postid`;
-    const bind = {
-      postid: postid
-    }
-    await connection.execute(sql, bind, options);
   } catch (err) {
     console.error('Error: ', err);
   } finally {
@@ -1252,6 +1288,7 @@ async function getAllProfilePosts(userid) {
   let connection;
   let result;
   try {
+    console.log('profile posts ' + userid);
     connection = await oracledb.getConnection(dbConfig);
     const sqlQuery = `SELECT * FROM POSTS WHERE USER_ID = :userid  ORDER BY TIME desc`;
     const binds = {
@@ -1264,12 +1301,15 @@ async function getAllProfilePosts(userid) {
     if (connection) {
       try {
         await connection.close();
+
       } catch (err) {
         console.error('Error closing connection: ', err);
       }
+
     }
+    return result.rows;
   }
-  return result.rows;
+
 }
 
 
@@ -1821,13 +1861,16 @@ async function getfollowstatus(userid1, userid2) {
   let connection;
   let result;
   try {
+    console.log(userid1 + " -----  " + userid2)
     connection = await oracledb.getConnection(dbConfig);
-    const sqlQuery = `SELECT count(*) FROM FOLLOW_LIST WHERE USER_ID = :userid1 AND RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2) `
+    const sqlQuery = `SELECT count(*) FROM FOLLOW_LIST WHERE USER_ID = :userid1 AND (RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2)) `
     const binds = {
       userid1: userid1,
       userid2: userid2
     }
     result = await connection.execute(sqlQuery, binds);
+    result = result.rows[0][0];
+    console.log('the resitl ' + result)
   } catch (err) {
     console.error('Error: ', err);
   } finally {
@@ -1839,7 +1882,7 @@ async function getfollowstatus(userid1, userid2) {
       }
     }
   }
-  return result.rows[0][0];
+  return result;
 }
 
 async function getrestaurantrating(userid1) {
@@ -1964,3 +2007,276 @@ async function addnewreviewpostwithoutpicture(userid, caption, rating, menuid) {
     }
   }
 }
+
+
+async function findusername(u) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT USER_ID, USER_NAME FROM USERS WHERE UPPER(USER_NAME) LIKE UPPER(:u)`;
+    const binds = {
+      u: u + '%'
+    }
+    result = await connection.execute(sqlQuery, binds);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result.rows
+}
+async function findusername(u) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, USER_TYPE, PROFILE_PICTURE FROM USERS WHERE UPPER(USER_NAME) LIKE UPPER(:u) ORDER BY UPPER(USER_NAME)`;
+    const binds = {
+      u: u + '%'
+    }
+    result = await connection.execute(sqlQuery, binds);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result.rows
+}
+async function findname(u) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, USER_TYPE, PROFILE_PICTURE FROM USERS WHERE UPPER(NAME) LIKE UPPER(:u1) OR UPPER(NAME) LIKE UPPER(:u2) ORDER BY UPPER(NAME)`;
+    const binds = {
+      u1: u + '%',
+      u2: '% ' + u + '%'
+    }
+    result = await connection.execute(sqlQuery, binds);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result.rows
+}
+
+async function deletepost(postid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = ` BEGIN
+        :result := DELETE_POST(:postid);
+      END;
+      `;
+    const binds = {
+      postid: { dir: oracledb.BIND_IN, val: postid },
+      result: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+    }
+    const options = {
+      autoCommit: true
+    }
+    await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+}
+
+async function deletecomment(commentid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `DELETE FROM COMMENTS WHERE COMMENT_ID = :commentid`;
+    const binds = {
+      commentid: commentid
+    };
+    const options = {
+      autoCommit: true
+    };
+    const s2 = `UPDATE POSTS SET COMMENT_COUNT = COMMENT_COUNT - 1 WHERE POST_ID = (SELECT POST_ID FROM COMMENTS WHERE COMMENT_ID = :commentid)`;
+    await connection.execute(s2, binds, options);
+    await connection.execute(sqlQuery, binds, options);
+
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+}
+
+
+
+async function getnearbyrestaurants(userid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT USER_ID FROM USERS WHERE USER_TYPE = 'R' 
+      ORDER BY (POWER((LOCATION_X - (SELECT LOCATION_X FROM USERS WHERE USER_ID = :userid)),2) + POWER((LOCATION_Y - (SELECT LOCATION_Y FROM USERS WHERE USER_ID = :userid)),2))`;
+    const binds = {
+      userid: userid
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result.rows;
+}
+
+async function getfollowedrestaurants(userid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = 'SELECT U.USER_ID FROM (FOLLOW_LIST F JOIN RESTAURANT R ON F.RESTAURANT_ID = R.RESTAURANT_ID) JOIN USERS U ON(R.USER_ID = U.USER_ID) WHERE F.USER_ID = :userid'
+    const binds = {
+      userid: userid
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result.rows;
+}
+
+async function addconnection(userid1, userid2) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `INSERT INTO PAGE_CONNECTION VALUES (:userid1, (select PAGE_ID FROM FOODIE_PAGE WHERE USER_ID = :userid2), SYSDATE)`;
+    const binds = {
+      userid1: userid1,
+      userid2: userid2
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+}
+
+async function removeconnection(userid1, userid2) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `delete from PAGE_CONNECTION where USER_ID = :userid1 AND PAGE_ID = (SELECT PAGE_ID FROM FOODIE_PAGE WHERE USER_ID = :userid2)`;
+    const binds = {
+      userid1: userid1,
+      userid2: userid2
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+}
+
+async function connectionstatus(userid1, userid2) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `
+      SELECT COUNT(*) FROM PAGE_CONNECTION P JOIN FOODIE_PAGE F ON (P.PAGE_ID = F.PAGE_ID) JOIN USERS U ON (U.USER_ID = F.USER_ID ) WHERE P.USER_ID = :userid1 AND U.USER_ID = :userid2`
+    const binds = {
+      userid1: userid1,
+      userid2: userid2
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+    result = result.rows[0][0];
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
