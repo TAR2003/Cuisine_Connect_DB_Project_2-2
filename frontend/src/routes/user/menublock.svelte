@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { getmenublockinfo } from '../../functions';
 	import Newreviewpost from './newreviewpost.svelte';
+	let userid = Cookies.get('userid');
 	export let menuid;
 	//let menuid = Cookies.get('menuid');
 	let menuinfo = null;
@@ -43,8 +44,10 @@
 			<p class="t">Price: ${menuinfo[0][3]}</p>
 		</div>
 		<div class="lower">
-			<button>Order item</button>
-			<button on:click={handlenewreviewpostclick}>Give a review</button>
+			{#if Cookies.get('usertype') != 'R'}
+				<button>Order item</button>
+				<button on:click={handlenewreviewpostclick}>Give a review</button>
+			{/if}
 			<button on:click={gotoreviews}>See reviews</button>
 		</div>
 	{/if}

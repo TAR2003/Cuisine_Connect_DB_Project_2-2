@@ -65,8 +65,9 @@
 	let profilePicture = null;
 	let coverPhoto = null;
 	async function uploadData() {
-		if (!isReady()) return;
-		else {
+		if (!isReady()) {
+			return;
+		} else {
 			console.log(!isReady());
 			const formData = new FormData();
 			formData.append('name', Name);
@@ -134,7 +135,7 @@
 		if (userinput == '') return false;
 		if (password == '') return false;
 		if (mobileno == '') return false;
-		if (mobileno.length != 11) return false;
+		if (mobileno.length < 1) return false;
 		if (d == '') return false;
 		if (!profilePicture) return false;
 		if (!coverPhoto) return false;
@@ -204,7 +205,12 @@
 	<div class="leftclass">
 		<div class="mobilediv">
 			<p class="entermobile">Enter your Number :</p>
-			<input class="takemobile" bind:value={mobileno} placeholder="Please Enter all 11 digits" />
+			<input
+				type="number"
+				class="takemobile"
+				bind:value={mobileno}
+				placeholder="Please Enter all 11 digits"
+			/>
 		</div>
 		<div class="form">
 			<p class="typetext">You are a :</p>

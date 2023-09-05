@@ -1,15 +1,25 @@
 <script>
 	import { onMount } from 'svelte';
 	import Cookies from 'js-cookie';
-	import { getfollowstatus, getuserinfoid, setfollow, unfollow } from '../../functions';
+	import {
+		addconnection,
+		connectionstatus,
+		getfollowstatus,
+		getuserinfoid,
+		removeconnection,
+		setfollow,
+		unfollow
+	} from '../../functions';
 	import Friend from './friend.svelte';
 	export let userprofile;
 	let userid = Cookies.get('userid');
 	let info = null;
 	let followstatus = 0;
+	let pageconnectionstatus = 0;
 	onMount(async () => {
 		info = await getuserinfoid(userprofile);
-		followstatus = await getfollowstatus(userid, userprofile);
+		if (info[5] == 'R') followstatus = await getfollowstatus(userid, userprofile);
+		if (info[5] == 'P') pageconnectionstatus = await connectionstatus(userid, userprofile);
 	});
 	function unflw() {
 		followstatus = 0;
@@ -22,12 +32,22 @@
 	function gotoprofile() {
 		window.location.href = `/user/profile/${info[0]}`;
 	}
+	async function pageconnect() {
+		pageconnectionstatus = 1;
+		await addconnection(userid, userprofile);
+		console.log('clicked connect');
+	}
+	async function removepageconnet() {
+		pageconnectionstatus = 0;
+		await removeconnection(userid, userprofile);
+		console.log('clicked disconnect');
+	}
 </script>
 
 {#if info}
 	{#if info[5] == 'C'}
 		<Friend friendid={info[0]} />
-	{:else}
+	{:else if info[5] == 'R'}
 		<div class="main">
 			<div class="picandname">
 				<img src={info[11]} alt="" class="pic" />
@@ -41,6 +61,23 @@
 					<button class="sbt" on:click={setflw}>Follow</button>
 				{:else}
 					<button class="sbt" on:click={unflw}>Unfollow</button>
+				{/if}
+			</div>
+		</div>
+	{:else}
+		<div class="main">
+			<div class="picandname">
+				<img src={info[11]} alt="" class="pic" />
+				<div class="superdivclass">
+					<h2>{info[2]}</h2>
+					<a on:click={gotoprofile}><p class="username">{info[1]}</p></a>
+				</div>
+			</div>
+			<div class="newflex">
+				{#if pageconnectionstatus == 0}
+					<button class="sbt" on:click={pageconnect}>Connect</button>
+				{:else}
+					<button class="sbt" on:click={removepageconnet}>Disconnect</button>
 				{/if}
 			</div>
 		</div>

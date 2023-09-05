@@ -5,6 +5,8 @@
 	import Newpost from './newpost.svelte';
 	import { findname, findusername, getprofilepicture, getuserinfoid } from '../../functions';
 	import { goto } from '$app/navigation';
+	import { get } from 'svelte/store';
+	import Newmenu from './newmenu.svelte';
 	let username = Cookies.get('username');
 	let userid = Cookies.get('userid');
 	let searchInput = '';
@@ -40,6 +42,13 @@
 	function handleposting() {
 		isnewpostVisible = false;
 	}
+	let isnewmenuvisible = false;
+	function handlenewmenu() {
+		isnewmenuvisible = true;
+	}
+	function addmenu() {
+		isnewmenuvisible = false;
+	}
 	function handleprofilepictureclick() {
 		window.location.href = `/user/profile/${userid}`;
 		//location.reload();
@@ -63,6 +72,9 @@
 	}
 	async function gotofollowedrestaurants() {
 		window.location.href = `/user/followedrestaurants/${userid}`;
+	}
+	async function gotoallconnectedpages() {
+		window.location.href = '/user/connectedpage';
 	}
 	console.log('searchinput -> ' + suggestions);
 </script>
@@ -144,10 +156,12 @@
 			>{/if}
 
 		<button class="samebuttons" on:click={gotofollowedrestaurants}>My Followed Restaurants</button>
-		<button class="samebuttons">My Foodie Pages</button>
+		<button class="samebuttons" on:click={gotoallconnectedpages}>My Foodie Pages</button>
 		<button class="samebuttons">Reservations</button>
-		<button class="samebuttons">{username}</button>
-		<button class="samebuttons">{username}</button>
+		{#if Cookies.get('usertype') == 'R'}
+			<button class="samebuttons" on:click={handlenewmenu}>Add New Menu</button>
+		{/if}
+		<button class="samebuttons" on:click={handlenewpostclick}>New Post</button>
 	</div>
 	<div class="slot"><slot /></div>
 	<div class="rightbar">
@@ -155,7 +169,6 @@
 		<button class="samebuttonsright" on:click={handleLogout}>Log out</button>
 		<button class="samebuttonsright">Deactivate</button>
 		<button class="samebuttonsright">Delete Account</button>
-		<button class="samebuttonsright" on:click={handlenewpostclick}>New Post</button>
 	</div>
 	<ConfirmationModal
 		visible={isLogoutModalVisible}
@@ -164,6 +177,7 @@
 		onCancel={cancelLogout}
 	/>
 	<Newpost visible={isnewpostVisible} onConfirm={handleposting} onCancel={handleposting} />
+	<Newmenu visible={isnewmenuvisible} onConfirm={addmenu} onCancel={addmenu} />
 </div>
 
 <style>
