@@ -511,6 +511,24 @@ app.post('/api/removeconnection', async (req, res) => {
   res.json(data);
 });
 
+app.post('/api/getconnectedpage', async (req, res) => {
+  const s = req.body;
+  const userid1 = s.userid1;
+  const data = await getconnectedpage(userid1);
+  res.json(data);
+});
+
+app.post('/api/addmenu', async (req, res) => {
+  const s = req.body;
+  const userid1 = s.userid1;
+  const menuname = s.menuname;
+  const price = s.price;
+  const data = '';
+  await addmenu(userid1, menuname, price);
+  res.json(data);
+});
+
+
 
 
 
@@ -2280,3 +2298,58 @@ async function connectionstatus(userid1, userid2) {
   return result;
 }
 
+async function getconnectedpage(userid1) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT F.USER_ID FROM PAGE_CONNECTION C JOIN FOODIE_PAGE F ON ( C.PAGE_ID = F.PAGE_ID) WHERE C.USER_ID = :userid1 `
+    const binds = {
+      userid1: userid1
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+async function addmenu(userid1, menuname, price) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `INSERT INTO MENU VALUES (MENU_ID_SEQ.NEXTVAL, (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID =:userid1), :menuname , :price, 0)`;
+    const binds = {
+      userid1: userid1,
+      menuname: menuname,
+      price: price
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+}
