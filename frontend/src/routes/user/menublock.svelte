@@ -1,7 +1,7 @@
 <script>
 	import Cookies from 'js-cookie';
 	import { onMount } from 'svelte';
-	import { getmenublockinfo } from '../../functions';
+	import { getmenublockinfo, insertorder } from '../../functions';
 	import Newreviewpost from './newreviewpost.svelte';
 	let userid = Cookies.get('userid');
 	export let menuid;
@@ -25,6 +25,25 @@
 		menuinfo = await getmenublockinfo(menuid);
 		newreviewpostvisible = false;
 	}
+	async function addcart() {
+		let msg = await insertorder(userid, menuid, menuinfo[0][6]);
+		if (msg == 0) {
+			notificationmsg = 'Order of this menu has already been placed';
+			shownotification();
+		} else {
+			notificationmsg = 'added to your cart';
+			shownotification();
+		}
+	}
+
+	let notificationVisible = false;
+	let notificationmsg = '';
+	function shownotification() {
+		notificationVisible = true;
+		setTimeout(() => {
+			notificationVisible = false;
+		}, 7000);
+	}
 </script>
 
 <div class="main">
@@ -45,7 +64,9 @@
 		</div>
 		<div class="lower">
 			{#if Cookies.get('usertype') != 'R'}
-				<button>Order item</button>
+				{#if Cookies.get('usertype') == 'C'}
+					<button on:click={addcart}>Order item</button>
+				{/if}
 				<button on:click={handlenewreviewpostclick}>Give a review</button>
 			{/if}
 			<button on:click={gotoreviews}>See reviews</button>
@@ -58,8 +79,30 @@
 		{menuid}
 	/>
 </div>
+{#if notificationVisible}
+	<div class="notification">{notificationmsg}</div>
+{/if}
 
 <style>
+	.notification {
+		position: fixed;
+		bottom: 130px;
+		background-color: #545654;
+		color: white;
+		padding: 20px;
+		border-radius: 10px;
+		animation: fadeOut 7s ease;
+		font-size: 30px;
+	}
+
+	@keyframes fadeOut {
+		0% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
 	button {
 		width: 200px;
 		height: 40px;

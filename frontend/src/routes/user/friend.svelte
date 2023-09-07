@@ -77,7 +77,7 @@
 			</div>
 		</div>
 
-		{#if friendid != userid}
+		{#if friendid != userid && Cookies.get('usertype') == 'C'}
 			{#if friendshipstatus == 'no'}
 				<button on:click={givereq} class="friendbutton">Send Request</button>
 			{:else if friendshipstatus == 'yes'}
@@ -86,7 +86,8 @@
 				{#if friendshipstatus == 'hisrequest'}
 					<button on:click={acceptreq} class="friendbutton">Accept Request</button>{/if}
 				<button on:click={deletereq} class="friendbutton">Delete Request</button>
-			{/if}{/if}
+			{/if}
+		{/if}
 	</div>
 {/if}
 

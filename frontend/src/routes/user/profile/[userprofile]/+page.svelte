@@ -14,11 +14,14 @@
 		getrestaurantrating,
 		getuserinfoid,
 		giverequest,
+		haversine,
 		removeconnection,
+		reservationstatus,
 		setfollow,
 		unfollow,
 		unfriend
 	} from '../../../../functions';
+	import Newreserve from '../../newreserve.svelte';
 
 	let allposts = null;
 	let profileinfo = null;
@@ -37,10 +40,13 @@
 	let followstatus = 0;
 	let rating = 0;
 	let pageconnection = 0;
+	let distance = 0;
 
 	onMount(async () => {
 		allposts = await getallprofileposts(userprofile);
 		profileinfo = await getuserinfoid(userprofile);
+		let tempu = await getuserinfoid(userid);
+		distance = haversine(tempu[7], tempu[8], profileinfo[7], profileinfo[8]);
 		if (profileinfo[5] == 'C' && Cookies.get('usertype') == 'C') {
 			if (userprofile != userid) {
 				showfriendsbutton = true;
@@ -148,6 +154,35 @@
 		await removeconnection(userid, userprofile);
 		console.log('clicked disconnect');
 	}
+	async function onreserveclick() {
+		let b = await reservationstatus(userid, userprofile);
+		if (b == 1) {
+			notificationmsg =
+				'You can not have more than one reservations at the same time at one restaurant';
+			shownotification();
+		} else {
+			shownewreserve = true;
+		}
+	}
+	let notificationVisible = false;
+	let notificationmsg = '';
+	function shownotification() {
+		notificationVisible = true;
+		setTimeout(() => {
+			notificationVisible = false;
+		}, 7000);
+	}
+
+	let shownewreserve = false;
+	function handleclose() {
+		shownewreserve = false;
+	}
+	function gotoconnpages() {
+		window.location.href = `/user/connectedpage/${userprofile}`;
+	}
+	function gotoabout() {
+		window.location.href = `/user/about/${userprofile}`;
+	}
 </script>
 
 {#if profileinfo != null}
@@ -158,14 +193,18 @@
 		<img class="dp" src={profileinfo[11]} alt="no image" />
 		<h1 class="title">{profileinfo[2]}</h1>
 	</div>
-	{#if profileinfo[5] == 'C'}
-		<a on:click={gotofriends}>Friends</a>
-	{:else if profileinfo[5] == 'R'}
-		<a on:click={gotofollowers}>Followers</a>
-	{/if}
-	<a on:click={gotofollowedrestaurants}>Following</a>
-	<a on:click={gotochat}>Message</a>
-
+	<h1>distance from your address: {distance} km</h1>
+	<div class="newline">
+		{#if profileinfo[5] == 'C'}
+			<a on:click={gotofriends}>Friends</a>
+		{:else if profileinfo[5] == 'R'}
+			<a on:click={gotofollowers}>Followers</a>
+		{/if}
+		<a on:click={gotofollowedrestaurants}>Following</a>
+		<a on:click={gotochat}>Message</a>
+		<a on:click={gotoconnpages}>Connected pages</a>
+		<a on:click={gotoabout}>About</a>
+	</div>
 	{#if profileinfo[5] == 'R'}
 		<h2>Restaurant Rating: {rating}</h2>
 		{#if followstatus == 1}
@@ -176,7 +215,9 @@
 		<div class="restaurantclass">
 			<button class="sbt" on:click={gotomenu}>Menu</button>
 			<button class="sbt" on:click={gotoreviews}>Reviews</button>
-			<button class="sbt">Reserve</button>
+			{#if Cookies.get('usertype') == 'C'}
+				<button class="sbt" on:click={onreserveclick}>Reserve</button>
+			{/if}
 			{#if followstatus == 0}
 				<button class="sbt" on:click={setflw}>Follow</button>
 			{:else}
@@ -220,8 +261,41 @@
 {:else}
 	<h1>You're caught up for now</h1>
 {/if}
+{#if notificationVisible}
+	<div class="notification">{notificationmsg}</div>
+{/if}
+
+<Newreserve
+	visible={shownewreserve}
+	onConfirm={handleclose}
+	onCancel={handleclose}
+	rid={userprofile}
+/>
 
 <style>
+	.newline {
+		display: flex;
+		flex-direction: column;
+	}
+	.notification {
+		position: fixed;
+		bottom: 130px;
+		background-color: #545654;
+		color: white;
+		padding: 20px;
+		border-radius: 10px;
+		animation: fadeOut 7s ease;
+		font-size: 30px;
+	}
+
+	@keyframes fadeOut {
+		0% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
 	.restaurantclass {
 		display: flex;
 		flex-direction: row;
@@ -235,6 +309,7 @@
 	a {
 		color: aqua;
 		font-size: 30px;
+		margin-right: 30px;
 	}
 	.friendbutton {
 		width: 200px;
@@ -256,7 +331,8 @@
 		font-family: Georgia, 'Times New Roman', Times, serif;
 	}
 	.dp {
-		width: 200px;
+		max-width: 200px;
+		max-height: 200px;
 		border-radius: 100%;
 	}
 	.profile-picture {

@@ -112,6 +112,9 @@
 		await deletecomment(commentid);
 		updatecomment();
 	}
+	async function gotopost() {
+		window.location.href = `/user/singleblock/${'post'}/${postid}`;
+	}
 	function f() {}
 </script>
 
@@ -166,10 +169,11 @@
 				{/if}
 				{#if year != null}
 					<p class="dateformat">
-						Last Updated on: {day}/{month}/{year} at {hours}:{minutes}:{seconds}
+						Last Updated on: <a on:click={gotopost}
+							>{day}/{month}/{year} at {hours}:{minutes}:{seconds}</a
+						>
 					</p>{/if}
 				{#if userid == postinfo[1]}
-					<button>click to edit post</button>
 					<button class="deletepost2" on:click={gotodelete}>Delete Post</button>
 				{/if}
 			</div>
@@ -243,7 +247,7 @@
 		justify-content: right;
 		width: 100px;
 		align-self: right;
-		margin-left: 470px;
+		margin-left: 600px;
 	}
 	.star-container {
 		display: flex;

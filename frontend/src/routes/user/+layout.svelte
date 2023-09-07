@@ -3,10 +3,19 @@
 	import { onMount } from 'svelte';
 	import ConfirmationModal from './ConfirmationModal.svelte';
 	import Newpost from './newpost.svelte';
-	import { findname, findusername, getprofilepicture, getuserinfoid } from '../../functions';
+	import {
+		deleteaccount,
+		findUserType,
+		findname,
+		findusername,
+		getprofilepicture,
+		getuserinfoid
+	} from '../../functions';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
 	import Newmenu from './newmenu.svelte';
+	import User from './user.svelte';
+	import Deleteaccountmodal from './deleteaccountmodal.svelte';
 	let username = Cookies.get('username');
 	let userid = Cookies.get('userid');
 	let searchInput = '';
@@ -74,9 +83,36 @@
 		window.location.href = `/user/followedrestaurants/${userid}`;
 	}
 	async function gotoallconnectedpages() {
-		window.location.href = '/user/connectedpage';
+		window.location.href = `/user/connectedpage/${userid}`;
 	}
-	console.log('searchinput -> ' + suggestions);
+	function gotoallorders() {
+		window.location.href = '/user/allorders';
+	}
+	function gotocart() {
+		window.location.href = '/user/cart';
+	}
+	function gotocurrentorders() {
+		window.location.href = '/user/currentorders';
+	}
+	function gotoreservations() {
+		window.location.href = '/user/reservations';
+	}
+	let dltv = false;
+	function dltclick() {
+		dltv = true;
+	}
+	async function dltit() {
+		dltv = false;
+		Cookies.remove('username');
+		Cookies.remove('userid');
+		Cookies.remove('userid');
+		await deleteaccount(userid);
+		console.log('it is said tho ne');
+		goto('/');
+	}
+	function cnl() {
+		dltv = false;
+	}
 </script>
 
 <div class="top">
@@ -109,7 +145,11 @@
 			</div>{/if}
 
 		<div class="homeclass">
-			<a href="/user/orders"><p class="Home">Orders</p></a>
+			{#if Cookies.get('usertype') == 'C'}
+				<a on:click={gotocurrentorders}><p class="Home">My current Orders</p></a>
+			{:else if Cookies.get('usertype') == 'R'}
+				<a on:click={gotocurrentorders}><p class="Home">Pending Orders</p></a>
+			{/if}
 		</div>
 	</div>
 	<div class="topright">
@@ -157,7 +197,7 @@
 
 		<button class="samebuttons" on:click={gotofollowedrestaurants}>My Followed Restaurants</button>
 		<button class="samebuttons" on:click={gotoallconnectedpages}>My Foodie Pages</button>
-		<button class="samebuttons">Reservations</button>
+
 		{#if Cookies.get('usertype') == 'R'}
 			<button class="samebuttons" on:click={handlenewmenu}>Add New Menu</button>
 		{/if}
@@ -165,10 +205,16 @@
 	</div>
 	<div class="slot"><slot /></div>
 	<div class="rightbar">
-		<button class="samebuttonsright">Orders</button>
+		{#if Cookies.get('usertype') == 'C'}
+			<button class="samebuttonsright" on:click={gotocart}>Go to cart</button>
+			<button class="samebuttonsright" on:click={gotoallorders}>My All Orders</button>
+			<button class="samebuttonsright" on:click={gotoreservations}>My Reservations</button>
+		{:else if Cookies.get('usertype') == 'R'}
+			<button class="samebuttonsright" on:click={gotoallorders}>All Orders</button>
+			<button class="samebuttonsright" on:click={gotoreservations}>Reservations</button>
+		{/if}
 		<button class="samebuttonsright" on:click={handleLogout}>Log out</button>
-		<button class="samebuttonsright">Deactivate</button>
-		<button class="samebuttonsright">Delete Account</button>
+		<button class="samebuttonsright" on:click={dltclick}>Delete Account</button>
 	</div>
 	<ConfirmationModal
 		visible={isLogoutModalVisible}
@@ -178,6 +224,7 @@
 	/>
 	<Newpost visible={isnewpostVisible} onConfirm={handleposting} onCancel={handleposting} />
 	<Newmenu visible={isnewmenuvisible} onConfirm={addmenu} onCancel={addmenu} />
+	<Deleteaccountmodal visible={dltv} onConfirm={dltit} onCancel={cnl} />
 </div>
 
 <style>
