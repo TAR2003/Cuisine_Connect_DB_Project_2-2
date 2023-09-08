@@ -766,6 +766,93 @@ app.post('/api/getallnotification', async (req, res) => {
   res.json(data);
 });
 
+app.post('/api/calculatemenuprice', async (req, res) => {
+  const s = req.body;
+  const data = await calculatemenuprice();
+  res.json(data);
+});
+
+app.post('/api/calculatetotaltransaction', async (req, res) => {
+  const s = req.body;
+  const data = await calculatetotaltransaction();
+  res.json(data);
+});
+
+app.post('/api/calculaterestauranttransaction', async (req, res) => {
+  const s = req.body;
+  const u1 = s.userid1;
+  const u2 = s.userid2;
+  await alog(u1, 'Calculating total transaction of ' + u2, 'Procedure: COUNT_TRANSACTION')
+  const data = await calculaterestauranttransaction(u2);
+  res.json(data);
+});
+
+
+app.post('/api/calculaterestaurantmenutransaction', async (req, res) => {
+  const s = req.body;
+  const u1 = s.userid1;
+  const u2 = s.userid2;
+  await alog(u1, 'Calculating total menu transaction of ' + u2, 'Procedure: COUNT_MENU_TRANSACTION');
+  const data = await calculaterestaurantmenutransaction(u2);
+  res.json(data);
+});
+
+app.post('/api/getadminlog', async (req, res) => {
+  const s = req.body;
+  const data = await getadminlog();
+  res.json(data);
+});
+////
+
+app.post('/api/getallusers', async (req, res) => {
+  const s = req.body;
+  const data = await getallusers();
+  res.json(data);
+});
+
+
+app.post('/api/getallcustomers', async (req, res) => {
+  const s = req.body;
+  const data = await getallcustomers();
+  res.json(data);
+});
+
+
+app.post('/api/getallrestaurants', async (req, res) => {
+  const s = req.body;
+  const data = await getallrestaurants();
+  res.json(data);
+});
+
+
+app.post('/api/getallpages', async (req, res) => {
+  const s = req.body;
+  const data = await getallpages();
+  res.json(data);
+});
+
+
+app.post('/api/getallmenu', async (req, res) => {
+  const s = req.body;
+  const data = await getallmenu();
+  res.json(data);
+});
+
+
+app.post('/api/getallorders1', async (req, res) => {
+  const s = req.body;
+  const data = await getallorders1();
+  res.json(data);
+});
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3625,3 +3712,206 @@ async function calculaterestauranttransaction(userid) {
   }
   return r;
 }
+
+async function calculaterestaurantmenutransaction(userid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = ` BEGIN
+      COUNT_MENU_TRANSACTION(:userid, :r);
+      END;
+      `;
+    const binds = {
+      userid: userid,
+      r: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+    r = result.outBinds.r;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return r;
+}
+
+async function getadminlog() {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT * FROM ADMIN_LOG ORDER BY TIME DESC
+      `;
+    result = await connection.execute(sqlQuery);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+
+
+async function getallusers() {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT * FROM USERS ORDER BY USER_ID
+      `;
+    result = await connection.execute(sqlQuery);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+async function getallcustomers() {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `
+      SELECT * FROM CUSTOMER C LEFT JOIN USERS U ON U.USER_ID = C.USER_ID ORDER BY C.CUSTOMER_ID
+      `;
+    result = await connection.execute(sqlQuery);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+async function getallrestaurants() {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT * FROM RESTAURANT R LEFT JOIN USERS U ON U.USER_ID = R.USER_ID ORDER BY R.RESTAURANT_ID       
+      `;
+    result = await connection.execute(sqlQuery);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+async function getallpages() {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `
+      SELECT * FROM FOODIE_PAGE F LEFT JOIN USERS U ON U.USER_ID = F.USER_ID ORDER BY F.PAGE_ID             
+      `;
+    result = await connection.execute(sqlQuery);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+
+
+async function getallmenu() {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `
+      SELECT * FROM MENU M LEFT JOIN RESTAURANT R ON M.RESTAURANT_ID = R.RESTAURANT_ID LEFT JOIN USERS U ON R.USER_ID = U.USER_ID ORDER BY MENU_ID   
+      `;
+    result = await connection.execute(sqlQuery);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+
+async function getallorders1() {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `SELECT * FROM FOODORDER F LEFT JOIN CUSTOMER C ON F.CUSTOMER_ID = C.CUSTOMER_ID LEFT JOIN USERS U ON U.USER_ID = C.USER_ID LEFT JOIN RESTAURANT R ON F.RESTAURANT_ID = R.RESTAURANT_ID LEFT JOIN USERS U1 ON U1.USER_ID = R.USER_ID LEFT JOIN MENU M ON M.MENU_ID = F.MENU_ID ORDER BY ORDER_ID  
+      `;
+    result = await connection.execute(sqlQuery);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+
