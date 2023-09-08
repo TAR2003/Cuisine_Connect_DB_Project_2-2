@@ -2,7 +2,15 @@
 	import { page } from '$app/stores';
 	import jsCookie from 'js-cookie';
 	import { onMount } from 'svelte';
-	import { cinfo, getuserinfoid, pinfo, rinfo, todate } from '../../../../functions';
+	import {
+		calculaterestaurantmenutransaction,
+		calculaterestauranttransaction,
+		cinfo,
+		getuserinfoid,
+		pinfo,
+		rinfo,
+		todate
+	} from '../../../../functions';
 
 	let userid = jsCookie.get('userid');
 	let userprofile = $page.params.userprofile;
@@ -11,6 +19,8 @@
 	let pin = null;
 	let cin = null;
 	let time = '';
+	let tp = 0;
+	let tmp = 0;
 	onMount(async () => {
 		info = await getuserinfoid(userprofile);
 		let t = todate(info[9]);
@@ -21,6 +31,8 @@
 		} else if (info[5] == 'R') {
 			rin = await rinfo(userprofile);
 			makeitdate(rin[0][2]);
+			tp = await calculaterestauranttransaction(userid, userprofile);
+			tmp = await calculaterestaurantmenutransaction(userid, userprofile);
 		} else if (info[5] == 'P') {
 			pin = await pinfo(userprofile);
 			makeitdate(pin[0][2]);
@@ -60,6 +72,8 @@
 			{#if rin}
 				<h2>Date of opening: {date}</h2>
 				<h2>Average Rating: {rin[0][3]}</h2>
+				<h2>Total transaction: {tp}</h2>
+				<h2>Total price of all the menu: {tmp}</h2>
 			{/if}
 		{:else}
 			<h1>Page profile</h1>

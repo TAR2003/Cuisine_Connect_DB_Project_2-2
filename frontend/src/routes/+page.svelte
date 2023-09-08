@@ -4,7 +4,6 @@
 	//import imgfile from '$lib/images/image1.jpg';
 	//import { Cookies } from '@sveltejs/kit';
 	import imgblock from './imgblock.svelte';
-	import Cookies from 'js-cookie';
 
 	let imgfiles = '/src/public/images/image';
 	let imgs = [];

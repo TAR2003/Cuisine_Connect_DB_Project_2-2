@@ -23,6 +23,7 @@
 	}
 
 	async function checkunique() {
+		if (userinput == 'admin') return 0;
 		let s = {
 			title: 'checkusername',
 			username: '@' + userinput

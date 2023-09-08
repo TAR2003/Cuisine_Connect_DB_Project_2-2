@@ -1,4 +1,42 @@
 
+export function todate(date) {
+    let jsDate = new Date(date);
+
+    let year = jsDate.getFullYear();
+    let month = jsDate.getMonth() + 1;
+    let day = jsDate.getDate();
+    let hours = jsDate.getHours();
+    let minutes = jsDate.getMinutes();
+    let seconds = jsDate.getSeconds();
+    return [day, month, year, hours, minutes, seconds];
+}
+export function haversine(lat1, lon1, lat2, lon2) {
+    // Convert latitude and longitude from degrees to radians
+    lat1 = toRadians(lat1);
+    lon1 = toRadians(lon1);
+    lat2 = toRadians(lat2);
+    lon2 = toRadians(lon2);
+
+    // Haversine formula
+    const dlat = lat2 - lat1;
+    const dlon = lon2 - lon1;
+    const a = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    // Radius of the Earth in kilometers
+    const R = 6371.0;
+
+    // Calculate the distance
+    const distance = R * c;
+    return distance;
+}
+
+function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+
+
 export async function getAuthentication(username, password) {
     let s = {
         title: 'getauthentication',
@@ -801,4 +839,1089 @@ export async function getfollowlist(userid1) {
     }
 }
 
+export async function findusername(u) {
+    const s = {
+        u: u
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/findusername', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
 
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function findname(u) {
+    const s = {
+        u: u
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/findname', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function deletepost(postid) {
+    const s = {
+        postid: postid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/deletepost', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function deletecomment(commentid) {
+    const s = {
+        commentid: commentid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/deletecomment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getnearbyrestaurants(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getnearbyrestaurants', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function getfollowedrestaurants(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getfollowedrestaurants', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function connectionstatus(userid1, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/connectionstatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function addconnection(userid1, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/addconnection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function removeconnection(userid1, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/removeconnection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getconnectedpage(userid1) {
+    const s = {
+        userid1: userid1
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getconnectedpage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getallorders(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallorders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getcurrentorders(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getcurrentorders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getcart(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getcart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function clearcart(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/clearcart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function finalizecart(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/finalizecart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function delivered(orderid) {
+    const s = {
+        orderid: orderid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/delivered', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function ontheway(orderid) {
+    const s = {
+        orderid: orderid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/ontheway', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+export async function preparing(orderid) {
+    const s = {
+        orderid: orderid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/preparing', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function removefromcart(orderid) {
+    const s = {
+        orderid: orderid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/removefromcart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function increaseamount(orderid) {
+    const s = {
+        orderid: orderid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/increaseamount', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+export async function decreaseamount(orderid) {
+    const s = {
+        orderid: orderid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/decreaseamount', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getorderinfo(orderid) {
+    const s = {
+        orderid: orderid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getorderinfo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function insertorder(userid1, menuid, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2,
+        menuid: menuid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/insertorder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+
+
+export async function pendingorders(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/pendingorders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+
+
+export async function allrestaurantorders(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/allrestaurantorders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+export async function reservationstatus(userid1, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/reservationstatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function removereservation(userid1, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/removereservation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function insertreservation(userid1, userid2, time) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2,
+        time: time
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/insertreservation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+export async function alluserreservations(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/alluserreservations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function allrestaurantreservations(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/allrestaurantreservations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function deleteaccount(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/deleteaccount', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function rinfo(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/rinfo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function cinfo(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/cinfo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function pinfo(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/pinfo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function seen(nid) {
+    const s = {
+        nid: nid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/seen', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+export async function getpostnotification(nid) {
+    const s = {
+        nid: nid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getpostnotification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getordernotification(nid) {
+    const s = {
+        nid: nid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getordernotification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getallnotification(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallnotification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function calculatemenuprice() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/calculatemenuprice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function calculatetotaltransaction() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/calculatetotaltransaction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function calculaterestauranttransaction(userid1, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/calculaterestauranttransaction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function calculaterestaurantmenutransaction(userid1, userid2) {
+    const s = {
+        userid1: userid1,
+        userid2: userid2
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/calculaterestaurantmenutransaction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+
+export async function getadminlog() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getadminlog', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+//
+
+export async function getallusers() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallusers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function getallcustomers() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallcustomers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function getallrestaurants() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallrestaurants', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function getallpages() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallpages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function getallmenu() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallmenu', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+export async function getallorders1() {
+    const s = {
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getallorders1', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}

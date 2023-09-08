@@ -12,6 +12,10 @@
 	onDestroy(() => {});
 
 	async function onButtonclick() {
+		if (username == 'admin' && password == 'admin') {
+			Cookies.set('username', 'admin');
+			goto('/Admin');
+		}
 		console.log(username + ' ' + password);
 		let v = await getAuthentication(username, password);
 		console.log('authentication status ' + v);
