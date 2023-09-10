@@ -845,7 +845,19 @@ app.post('/api/getallorders1', async (req, res) => {
   res.json(data);
 });
 
+app.post('/api/updatepassword', async (req, res) => {
+  const s = req.body;
+  const data = '';
+  await updatepassword(s.userid, s.password);
+  res.json(data);
+});
 
+app.post('/api/updatepost', async (req, res) => {
+  const s = req.body;
+  const data = '';
+  await updatepost(s.postid, s.caption);
+  res.json(data);
+});
 
 
 
@@ -2378,30 +2390,6 @@ async function findusername(u) {
   let result;
   try {
     connection = await oracledb.getConnection(dbConfig);
-    const sqlQuery = `SELECT USER_ID, USER_NAME FROM USERS WHERE UPPER(USER_NAME) LIKE UPPER(:u)`;
-    const binds = {
-      u: u + '%'
-    }
-    result = await connection.execute(sqlQuery, binds);
-    result = result.rows;
-  } catch (err) {
-    console.error('Error: ', err);
-  } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Error closing connection: ', err);
-      }
-    }
-  }
-  return result
-}
-async function findusername(u) {
-  let connection;
-  let result;
-  try {
-    connection = await oracledb.getConnection(dbConfig);
     const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, USER_TYPE, PROFILE_PICTURE FROM USERS WHERE UPPER(USER_NAME) LIKE UPPER(:u) ORDER BY UPPER(USER_NAME)`;
     const binds = {
       u: u + '%'
@@ -3915,3 +3903,57 @@ async function getallorders1() {
 }
 
 
+async function updatepassword(userid, password) {
+  let connection;
+  let result;
+  try {
+    console.log(' here in the unvkton ' + userid + " " + password);
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `UPDATE USERS SET  LAST_UPDATE = SYSDATE , PASSWORD = ORA_HASH(:password) WHERE USER_ID = :userid`;
+    const binds = {
+      userid: userid,
+      password: password
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+}
+
+async function updatepost(postid, caption) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `UPDATE  POSTS SET TIME = SYSDATE , CAPTION = :caption WHERE POST_ID = :postid `;
+    const binds = {
+      postid: postid,
+      caption: caption
+    }
+    const options = {
+      autoCommit: true
+    }
+    result = await connection.execute(sqlQuery, binds, options);
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+}
