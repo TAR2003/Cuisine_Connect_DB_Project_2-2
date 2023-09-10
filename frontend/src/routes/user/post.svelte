@@ -15,9 +15,11 @@
 		getuserinfoid,
 		getreviewpost,
 		deletepost,
-		deletecomment
+		deletecomment,
+		todate
 	} from '../../functions';
 	import { goto } from '$app/navigation';
+	import Postupdate from './postupdate.svelte';
 	export let postid;
 	let username = Cookies.get('username');
 	let userid = Cookies.get('userid');
@@ -56,14 +58,14 @@
 		}
 		posterinfo = await getuserinfoid(postinfo[1]);
 		comments = await getcomments(postid);
-		let jsDate = new Date(await postinfo[7]);
+		let jsDate = todate(postinfo[7]);
 
-		year = jsDate.getFullYear();
-		month = jsDate.getMonth() + 1;
-		day = jsDate.getDate();
-		hours = jsDate.getHours();
-		minutes = jsDate.getMinutes();
-		seconds = jsDate.getSeconds();
+		year = jsDate[2];
+		month = jsDate[1];
+		day = jsDate[0];
+		hours = jsDate[3];
+		minutes = jsDate[4];
+		seconds = jsDate[5];
 	});
 	async function updatecomment() {
 		reacted = await reactsituation(userid, postid);
@@ -114,6 +116,14 @@
 	}
 	async function gotopost() {
 		window.location.href = `/user/singleblock/${'post'}/${postid}`;
+	}
+	let isupdatepostvisible = false;
+	function gotoupdatepost() {
+		isupdatepostvisible = true;
+	}
+	async function closeupdatepost() {
+		postinfo = await getpostinfo(postid);
+		isupdatepostvisible = false;
 	}
 	function f() {}
 </script>
@@ -174,6 +184,7 @@
 						>
 					</p>{/if}
 				{#if userid == postinfo[1]}
+					<button class="updatepost" on:click={gotoupdatepost}>Edit Post</button>
 					<button class="deletepost2" on:click={gotodelete}>Delete Post</button>
 				{/if}
 			</div>
@@ -223,11 +234,22 @@
 				{/if}
 			</div>
 		</div>
+		<Postupdate
+			{postid}
+			caption={postinfo[6]}
+			onCancel={closeupdatepost}
+			onConfirm={closeupdatepost}
+			visible={isupdatepostvisible}
+		/>
 	{/if}
 {:else}<div class="loading-circle" />
 {/if}
 
 <style>
+	.updatepost {
+		margin-top: 20px;
+		margin-left: 0px;
+	}
 	.rightshift {
 		display: flex;
 		flex-direction: row;
@@ -247,7 +269,7 @@
 		justify-content: right;
 		width: 100px;
 		align-self: right;
-		margin-left: 600px;
+		margin-left: 520px;
 	}
 	.star-container {
 		display: flex;
@@ -341,6 +363,7 @@
 		font-size: 30px;
 		display: flex;
 		flex-direction: row;
+		resize: none;
 	}
 	.comments {
 		width: 700px;

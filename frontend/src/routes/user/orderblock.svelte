@@ -1,16 +1,20 @@
 <script>
 	import Cookies from 'js-cookie';
 	import { onMount } from 'svelte';
-	import { delivered, getorderinfo, ontheway, preparing } from '../../functions';
+	import { delivered, getorderinfo, ontheway, preparing, todate } from '../../functions';
 
 	let userid = Cookies.get('userid');
 	let usertype = Cookies.get('usertype');
+	let time = '';
 	export let orderid;
 	let status = '';
 	let orderinfo = null;
 	onMount(async () => {
 		orderinfo = await getorderinfo(orderid);
 		det(orderinfo[5]);
+		let t = todate(orderinfo[4]);
+
+		time = t[0] + '/' + t[1] + '/' + t[2] + ' at ' + t[3] + ':' + t[4] + ':' + t[5];
 	});
 	function det(o) {
 		if (o == 'O') status = 'Order placed';
@@ -70,6 +74,9 @@
 				</div>
 				<div class="row">
 					<h3>Total Price: {orderinfo[6]}</h3>
+				</div>
+				<div class="row">
+					<h3>Ordered on: {time}</h3>
 				</div>
 			</div>
 		</div>

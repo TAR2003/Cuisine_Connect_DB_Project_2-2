@@ -11,6 +11,7 @@
 		rinfo,
 		todate
 	} from '../../../../functions';
+	import Passwordchange from '../passwordchange.svelte';
 
 	let userid = jsCookie.get('userid');
 	let userprofile = $page.params.userprofile;
@@ -42,6 +43,14 @@
 	function makeitdate(dt) {
 		let d = todate(dt);
 		date = d[0] + '/' + d[1] + '/' + d[2];
+	}
+
+	let isupdatepasswordvisible = false;
+	function onupdateclick() {
+		isupdatepasswordvisible = true;
+	}
+	function stopit() {
+		isupdatepasswordvisible = false;
 	}
 </script>
 
@@ -90,6 +99,10 @@
 		{/if}
 	</div>
 {/if}
+{#if userid == userprofile}
+	<button on:click={onupdateclick}>Click to update your password</button>
+{/if}
+<Passwordchange visible={isupdatepasswordvisible} onConfirm={stopit} onCancel={stopit} />
 
 <style>
 	.main {

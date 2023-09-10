@@ -8,7 +8,17 @@ export function todate(date) {
     let hours = jsDate.getHours();
     let minutes = jsDate.getMinutes();
     let seconds = jsDate.getSeconds();
-    return [day, month, year, hours, minutes, seconds];
+    let arr = [day, month, year, hours, minutes, seconds]
+    let ans = ['', '', '', '', '', '']
+    let i = 0;
+    for (let s of arr) {
+        if (s < 10) {
+            ans[i] = '0' + s;
+        }
+        else ans[i] = '' + s;
+        i++;
+    }
+    return ans;
 }
 export function haversine(lat1, lon1, lat2, lon2) {
     // Convert latitude and longitude from degrees to radians
@@ -1925,3 +1935,50 @@ export async function getallorders1() {
         console.error('Error :', error);
     }
 }
+
+export async function updatepassword(userid, password) {
+    const s = {
+        userid: userid,
+        password: password
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/updatepassword', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function updatepost(postid, caption) {
+    const s = {
+        postid: postid,
+        caption: caption
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/updatepost', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+

@@ -5,7 +5,7 @@
 	let userinput = '';
 	$: userparam = '@' + userinput;
 	let password = '';
-	let alertstring = '';
+	let alertstring = 'Noo you can not have this username';
 	let Name = '';
 	let email = '';
 	let mobileno = '';

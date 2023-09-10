@@ -17,11 +17,12 @@
 	let info = null;
 	let followstatus = 0;
 	let pageconnectionstatus = 0;
-	let distance = 0;
+	let distance = null;
 	onMount(async () => {
 		info = await getuserinfoid(userprofile);
 		let tempu = await getuserinfoid(userid);
 		distance = haversine(tempu[7], tempu[8], info[7], info[8]);
+		distance = distance.toFixed(2);
 		if (info[5] == 'R') followstatus = await getfollowstatus(userid, userprofile);
 		if (info[5] == 'P') pageconnectionstatus = await connectionstatus(userid, userprofile);
 	});
@@ -67,7 +68,9 @@
 					<button class="sbt" on:click={unflw}>Unfollow</button>
 				{/if}
 			</div>
-			<p>distance from your address: {distance} km</p>
+			{#if distance}
+				<p>distance from your address: {distance} km</p>
+			{/if}
 		</div>
 	{:else}
 		<div class="main">
@@ -85,7 +88,9 @@
 					<button class="sbt" on:click={removepageconnet}>Disconnect</button>
 				{/if}
 			</div>
-			<p>distance from your address: {distance} km</p>
+			{#if distance}
+				<p>distance from your address: {distance} km</p>
+			{/if}
 		</div>
 	{/if}
 {/if}

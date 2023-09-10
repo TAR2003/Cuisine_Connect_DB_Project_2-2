@@ -47,6 +47,7 @@
 		profileinfo = await getuserinfoid(userprofile);
 		let tempu = await getuserinfoid(userid);
 		distance = haversine(tempu[7], tempu[8], profileinfo[7], profileinfo[8]);
+		distance = distance.toFixed(2);
 		if (profileinfo[5] == 'C' && Cookies.get('usertype') == 'C') {
 			if (userprofile != userid) {
 				showfriendsbutton = true;
@@ -206,7 +207,7 @@
 		<a on:click={gotoabout}>About</a>
 	</div>
 	{#if profileinfo[5] == 'R'}
-		<h2>Restaurant Rating: {rating}</h2>
+		<h2>Restaurant Rating: {rating.toFixed(2)}</h2>
 		{#if followstatus == 1}
 			<h2>You follow this restaurant</h2>
 		{:else}

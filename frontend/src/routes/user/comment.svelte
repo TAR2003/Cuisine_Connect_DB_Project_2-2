@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { deletecomment, getuserinfoid } from '../../functions';
+	import { deletecomment, getuserinfoid, todate } from '../../functions';
 	import Cookies from 'js-cookie';
 	export let userid, caption, time;
 	let uid = Cookies.get('userid');
@@ -8,14 +8,14 @@
 	let year, month, day, hours, minutes, seconds;
 	onMount(async () => {
 		arr = await getuserinfoid(userid);
-		let jsDate = new Date(await time);
+		let jsDate = todate(time);
 
-		year = jsDate.getFullYear();
-		month = jsDate.getMonth() + 1;
-		day = jsDate.getDate();
-		hours = jsDate.getHours();
-		minutes = jsDate.getMinutes();
-		seconds = jsDate.getSeconds();
+		year = jsDate[2];
+		month = jsDate[1];
+		day = jsDate[0];
+		hours = jsDate[3];
+		minutes = jsDate[4];
+		seconds = jsDate[5];
 	});
 
 	function gotoprofile() {

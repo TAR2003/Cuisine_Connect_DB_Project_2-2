@@ -30,6 +30,7 @@
 			<div class="col"><h2>User Type: {l[5]}</h2></div>
 		</div>
 	{/each}
+{:else}<div class="loading-circle" />
 {/if}
 
 <style>

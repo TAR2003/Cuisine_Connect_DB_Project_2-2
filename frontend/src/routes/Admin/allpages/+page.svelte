@@ -21,6 +21,7 @@
 			<div class="col"><h2>username: {l[4]}</h2></div>
 		</div>
 	{/each}
+{:else}<div class="loading-circle" />
 {/if}
 
 <style>

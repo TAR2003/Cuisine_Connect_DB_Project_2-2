@@ -9,6 +9,7 @@
 	let menuinfo = null;
 	onMount(async () => {
 		menuinfo = await getmenublockinfo(menuid);
+		menuinfo[0][4] = menuinfo[0][4].toFixed(2);
 	});
 
 	function gotorestaurantprofile() {

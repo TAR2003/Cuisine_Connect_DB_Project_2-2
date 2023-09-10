@@ -471,18 +471,18 @@
 	ul {
 		list-style-type: none;
 		padding: 0;
-		width: 240px;
-		margin-left: 110px;
+		width: 330px;
+		margin-left: 80px;
 		margin-top: 0%;
 	}
 	li {
 		cursor: pointer;
-		padding: 10px;
-		height: 70px;
+		padding-bottom: 20px;
+		padding-top: 20px;
 		margin-bottom: 30px;
 		border: 1px solid white;
 		margin: 0%;
-		font-size: 25px;
+		font-size: 20px;
 	}
 	.r {
 		position: relative;
