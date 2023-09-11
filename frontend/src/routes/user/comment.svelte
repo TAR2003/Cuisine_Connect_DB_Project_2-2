@@ -8,6 +8,7 @@
 	let year, month, day, hours, minutes, seconds;
 	onMount(async () => {
 		arr = await getuserinfoid(userid);
+
 		let jsDate = todate(time);
 
 		year = jsDate[2];

@@ -39,7 +39,7 @@
 			await addcomment(userid, postid, caption);
 			caption = '';
 		}
-		updatecomment();
+		await updatecomment();
 	}
 
 	let postinfo = null;
@@ -69,8 +69,12 @@
 	});
 	async function updatecomment() {
 		reacted = await reactsituation(userid, postid);
-		comments = await getcomments(postid);
+		//comments = [[]];
+		let c2 = await getcomments(postid);
+		comments = [[]];
+		comments = c2;
 		postinfo = await getpostinfo(postid);
+		console.log('all comments ' + comments);
 	}
 	async function handletotalclick() {}
 	async function handlereactclick() {
@@ -225,7 +229,10 @@
 
 				{#if showcomment == true}<div>
 						{#each comments as c}
-							<Comment userid={c[2]} caption={c[3]} time={c[4]} />
+							{#if userid == c[2]}
+								<Comment {userid} caption={c[3]} time={c[4]} />
+							{:else}
+								<Comment userid={c[2]} caption={c[3]} time={c[4]} />{/if}
 							{#if userid == c[2]}
 								<button on:click={() => gotodeletecomment(c[0])}>Delete Comment</button>
 							{/if}

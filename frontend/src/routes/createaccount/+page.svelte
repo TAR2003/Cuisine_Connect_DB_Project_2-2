@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import Map from './Map.svelte';
 	import Cookies from 'js-cookie';
+
 	let userinput = '';
 	$: userparam = '@' + userinput;
 	let password = '';
@@ -46,11 +47,7 @@
 		}
 	}
 
-	let selectedCoordinates = { lat: 23.8103, lng: 90.4125 }; // Default coordinates
-
-	function handleCoordinatesChange(event) {
-		selectedCoordinates = event.detail;
-	}
+	let selectedCoordinates = null; // Default coordinates
 
 	let options = ['Customer', 'Restaurant', 'Page'];
 	let selectedOption = 'Customer';
@@ -79,7 +76,7 @@
 			formData.append('type', selectedOption[0]);
 			formData.append('date', d);
 			formData.append('x', selectedCoordinates.lat);
-			formData.append('y', selectedCoordinates.lng);
+			formData.append('y', selectedCoordinates.lon);
 			formData.append('profilePicture', profilePicture);
 			formData.append('coverPhoto', coverPhoto);
 
@@ -140,6 +137,7 @@
 		if (d == '') return false;
 		if (!profilePicture) return false;
 		if (!coverPhoto) return false;
+		if (selectedCoordinates == null) return false;
 		else return true;
 	}
 </script>
@@ -231,7 +229,13 @@
 		</div>
 	</div>
 	<div class="mapcontainer">
-		<Map on:coordinatesChanged={handleCoordinatesChange} />
+		<Map bind:coordinates={selectedCoordinates} />
+		<p>
+			{#if selectedCoordinates}<h2 class="green">
+					Lat : {selectedCoordinates.lat.toFixed(6)} Lng : {selectedCoordinates.lon.toFixed(6)}
+				</h2>
+			{:else}<p class="red">You have not entered a valid coordinate yet</p>{/if}
+		</p>
 	</div>
 </div>
 
@@ -247,6 +251,13 @@
 <button class="submit" on:click={uploadData}>Submit</button>
 
 <style>
+	.green {
+		color: rgb(24, 231, 24);
+		padding-top: 50px;
+	}
+	.red {
+		color: red;
+	}
 	.pic {
 		font-size: 20px;
 	}

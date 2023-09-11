@@ -342,8 +342,8 @@
 		margin-bottom: 60px;
 	}
 	.cover {
-		height: 400px;
-		max-width: 700px;
+		max-height: 400px;
+		width: 870px;
 	}
 	.loading-circle {
 		width: 40px;

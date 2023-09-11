@@ -14,6 +14,11 @@
 		};
 		imgs[i - 1] = temp;
 	}
+	imgs[0].para = 'Connect With all kind of restaurants and form friendships';
+	imgs[1].para = 'Bringing people together, one meal at a time.';
+	imgs[2].para = 'Where restaurants become rendezvous points.';
+	imgs[3].para = 'Savor the flavors, connect with cultures.';
+
 	let a = 2;
 	let scrollPosition = 0;
 

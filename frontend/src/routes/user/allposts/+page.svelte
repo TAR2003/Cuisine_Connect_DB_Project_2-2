@@ -1,15 +1,9 @@
 <script>
 	import Cookies from 'js-cookie';
-	import Post from './post.svelte';
 	import { onMount } from 'svelte';
-	import {
-		getallposts,
-		getcustomertimeline,
-		getpagetimeline,
-		getrestaurantrating,
-		getrestauranttimeline
-	} from '../../functions';
 	import jsCookie from 'js-cookie';
+	import { getallposts } from '../../../functions';
+	import Post from '../post.svelte';
 
 	let userid = jsCookie.get('userid');
 	let usertype = jsCookie.get('usertype');
@@ -19,9 +13,7 @@
 		end = 19;
 	let showmorebutton = false;
 	onMount(async () => {
-		if (usertype == 'C') allposts = await getcustomertimeline(userid);
-		else if (usertype == 'R') allposts = await getrestauranttimeline(userid);
-		else if (usertype == 'P') allposts = await getpagetimeline(userid);
+		allposts = await getallposts();
 		for (let i = 0; i < allposts.length; i++) {
 			posts[i] = allposts[i][0];
 			if (i >= end) {

@@ -1982,3 +1982,70 @@ export async function updatepost(postid, caption) {
     }
 }
 
+
+export async function getcustomertimeline(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getcustomertimeline', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+export async function getrestauranttimeline(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getrestauranttimeline', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}
+
+
+export async function getpagetimeline(userid) {
+    const s = {
+        userid: userid
+    }
+    try {
+        const response = await fetch('http://localhost:3001/api/getpagetimeline', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(s)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error :', error);
+    }
+}

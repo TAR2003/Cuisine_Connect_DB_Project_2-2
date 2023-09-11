@@ -113,6 +113,9 @@
 	function cnl() {
 		dltv = false;
 	}
+	function gotoallposts() {
+		window.location.href = '/user/allposts';
+	}
 </script>
 
 <div class="top">
@@ -195,6 +198,7 @@
 				>My Friends</button
 			>{/if}
 
+		<button class="samebuttons" on:click={gotoallposts}>View All Posts</button>
 		<button class="samebuttons" on:click={gotofollowedrestaurants}>My Followed Restaurants</button>
 		<button class="samebuttons" on:click={gotoallconnectedpages}>My Foodie Pages</button>
 

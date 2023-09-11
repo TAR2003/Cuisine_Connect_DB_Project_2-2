@@ -1,88 +1,104 @@
 <script>
-	import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
-	import { parse } from 'svelte/compiler';
+	export let coordinates = null;
+	let address = '';
+	let suggestions = [];
+	let isLoading = false;
 
-	let mapContainer;
-	let map;
-	let selectedCoordinates = { lat: 23.8103, lng: 90.4125 }; // Default coordinates
-
-	const dispatch = createEventDispatcher();
-
-	onMount(() => {
-		initializeMap();
-	});
-
-	afterUpdate(() => {
-		const value = parseFloat(selectedCoordinates.lng);
-		const v2 = parseFloat(selectedCoordinates.lat);
-		if (value == null || v2 == null) return;
-
-		if (map) {
-			map.setView([selectedCoordinates.lat, selectedCoordinates.lng], 13);
+	async function fetchCoordinates() {
+		isLoading = true;
+		console.log('searching ' + address);
+		if (address.trim() === '') {
+			isLoading = false;
+			coordinates = null;
+			suggestions = [];
+			return;
 		}
-		dispatch('coordinatesChanged', selectedCoordinates);
-	});
+		if (address === '') {
+			isLoading = false;
+			coordinates = null;
+			suggestions = [];
+			return;
+		}
 
-	function initializeMap() {
-		map = L.map(mapContainer).setView([selectedCoordinates.lat, selectedCoordinates.lng], 13);
+		try {
+			const response = await fetch(
+				`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+					address
+				)}&format=json&limit=5` // Adjust the limit as needed
+			);
+			const data = await response.json();
 
-		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-			attribution:
-				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-		}).addTo(map);
+			suggestions = data.map((item) => ({
+				name: item.display_name,
+				coordinates: {
+					lat: parseFloat(item.lat),
+					lon: parseFloat(item.lon)
+				}
+			}));
 
-		map.on('click', (event) => {
-			selectedCoordinates = event.latlng;
-			dispatch('coordinatesChanged', selectedCoordinates); // Emit the custom event
-		});
+			if (data.length > 0) {
+				coordinates = {
+					lat: parseFloat(data[0].lat),
+					lon: parseFloat(data[0].lon)
+				};
+			} else {
+				coordinates = null;
+			}
+			isLoading = false;
+		} catch (error) {
+			console.error('Error fetching coordinates:', error);
+			coordinates = null;
+			isLoading = false;
+		}
+	}
+
+	function selectSuggestion(suggestion) {
+		address = suggestion.name;
+		coordinates = suggestion.coordinates;
+		suggestions = [];
 	}
 </script>
 
-<div class="total">
-	<div id="mapContainer" bind:this={mapContainer} />
-	<div class="info">
-		{#if selectedCoordinates}
-			<p class="p1">Selected Coordinates: {selectedCoordinates.lat}, {selectedCoordinates.lng}</p>
-		{/if}
-		<input class="i1" type="text" bind:value={selectedCoordinates.lat} />
-		<input class="i2" type="text" bind:value={selectedCoordinates.lng} />
-	</div>
+<div>
+	<h1>Enter you address(Please select a valid one)</h1>
+	<input
+		type="text"
+		bind:value={address}
+		on:input={fetchCoordinates}
+		placeholder="Enter an address"
+	/>
+	{#if isLoading}
+		<div class="loading-circle" />
+	{:else if suggestions.length > 0}
+		<ul>
+			{#each suggestions as suggestion (suggestion.coordinates)}
+				<li>
+					<button on:click={() => selectSuggestion(suggestion)}>
+						{suggestion.name}
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </div>
 
 <style>
-	#mapContainer {
-		height: 300px;
-		width: 900px;
-		text-align: right;
-		margin: 0%;
-		display: inline-block;
+	button {
+		width: 800px;
+		font-size: 15px;
+		text-align: left;
+		padding-top: 10px;
+		padding-bottom: 5px;
 	}
-	.info {
-		display: inline-block;
-		text-align: center;
-		justify-content: center;
+
+	ul {
+		height: 200px;
+		width: 800px;
+		overflow-y: scroll;
 	}
-	.total {
-		display: flex;
-		flex: 1;
-	}
-	.p1 {
-		text-align: center;
-		margin-top: 20px;
-		margin-left: 50px;
-		font-size: 40px;
-	}
-	.i1 {
-		text-align: center;
-		margin-left: 0px;
-		margin-top: 10px;
-		height: 30px;
-		width: 230px;
-	}
-	.i2 {
-		text-align: center;
-		margin-top: 10px;
-		height: 30px;
-		width: 230px;
+	input {
+		width: 600px;
+		height: 25px;
+		font-size: 20px;
 	}
 </style>
