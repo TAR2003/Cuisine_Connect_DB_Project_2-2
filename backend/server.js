@@ -859,6 +859,25 @@ app.post('/api/updatepost', async (req, res) => {
   res.json(data);
 });
 
+app.post('/api/getcustomertimeline', async (req, res) => {
+  const s = req.body;
+  const data = await getcustomertimeline(s.userid);
+  res.json(data);
+});
+
+app.post('/api/getrestauranttimeline', async (req, res) => {
+  const s = req.body;
+  const data = await getrestauranttimeline(s.userid);
+  res.json(data);
+});
+
+app.post('/api/getpagetimeline', async (req, res) => {
+  const s = req.body;
+  const data = await getpagetimeline(s.userid);
+  res.json(data);
+});
+
+
 
 
 
@@ -1307,7 +1326,7 @@ async function getcomments(postid) {
   let result;
   try {
     connection = await oracledb.getConnection(dbConfig);
-    const sqlQuery = 'SELECT * FROM COMMENTS WHERE POST_ID = :postid';
+    const sqlQuery = 'SELECT * FROM COMMENTS WHERE POST_ID = :postid ORDER BY TIME';
     const binds = {
       postid: postid
     }
@@ -3523,7 +3542,7 @@ async function getallnotification(userid) {
   try {
     connection = await oracledb.getConnection(dbConfig);
     const sqlQuery = `
-      SELECT * FROM NOTIFICATION WHERE USER_ID = :userid`;
+      SELECT * FROM NOTIFICATION WHERE USER_ID = :userid ORDER BY TIME DESC`;
     const binds = {
       userid: userid
     }
@@ -3956,4 +3975,125 @@ async function updatepost(postid, caption) {
       }
     }
   }
+}
+
+async function getcustomertimeline(userid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `
+SELECT POST_ID FROM (
+SELECT	POST_ID, TIME
+ FROM POSTS P 
+ WHERE USER_ID IN ( SELECT (SELECT USER_ID FROM CUSTOMER WHERE CUSTOMER_ID = C1_ID) FROM FRIEND_REQUEST WHERE C2_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid) AND STATUS = 'A') 
+UNION 
+SELECT POST_ID , TIME
+FROM POSTS P 
+WHERE USER_ID IN (SELECT (SELECT USER_ID FROM CUSTOMER WHERE CUSTOMER_ID = C2_ID) FROM FRIEND_REQUEST WHERE C1_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid))
+UNION 
+SELECT POST_ID , TIME 
+FROM POSTS
+WHERE USER_ID = :userid
+UNION
+SELECT POST_ID, TIME FROM POSTS WHERE USER_ID = :userid
+UNION
+SELECT POST_ID , TIME FROM POSTS WHERE USER_ID IN (SELECT R.USER_ID FROM FOLLOW_LIST F LEFT JOIN RESTAURANT R ON F.RESTAURANT_ID = R.RESTAURANT_ID WHERE F.USER_ID = :userid)
+UNION
+SELECT P.POST_ID , P.TIME FROM POSTS P LEFT JOIN REVIEW_POST R ON (P.POST_ID = R.POST_ID)  WHERE R.RESTAURANT_ID IN (SELECT RESTAURANT_ID FROM FOLLOW_LIST WHERE USER_ID = :userid)
+UNION
+SELECT POST_ID , TIME FROM POSTS WHERE  USER_ID IN (SELECT F.USER_ID FROM PAGE_CONNECTION P LEFT JOIN FOODIE_PAGE F ON (F.PAGE_ID = P.PAGE_ID ) WHERE P.USER_ID = :userid)
+) R
+ORDER BY R.TIME DESC`;
+    const binds = {
+      userid: userid
+    }
+    result = await connection.execute(sqlQuery, binds);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+async function getrestauranttimeline(userid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `
+SELECT POST_ID FROM (
+SELECT POST_ID, TIME FROM POSTS WHERE USER_ID = :userid
+UNION
+SELECT P.POST_ID , P.TIME FROM POSTS P LEFT JOIN REVIEW_POST R ON (P.POST_ID = R.POST_ID)  WHERE RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid)
+UNION
+SELECT POST_ID , TIME FROM POSTS WHERE USER_ID IN (SELECT R.USER_ID FROM FOLLOW_LIST F LEFT JOIN RESTAURANT R ON F.RESTAURANT_ID = R.RESTAURANT_ID WHERE F.USER_ID = :userid)
+UNION
+SELECT P.POST_ID , P.TIME FROM POSTS P LEFT JOIN REVIEW_POST R ON (P.POST_ID = R.POST_ID)  WHERE R.RESTAURANT_ID IN (SELECT RESTAURANT_ID FROM FOLLOW_LIST WHERE USER_ID = :userid)
+UNION
+SELECT POST_ID , TIME FROM POSTS WHERE  USER_ID IN (SELECT F.USER_ID FROM PAGE_CONNECTION P LEFT JOIN FOODIE_PAGE F ON (F.PAGE_ID = P.PAGE_ID ) WHERE P.USER_ID = :userid)
+) R
+ORDER BY R.TIME DESC
+`;
+    const binds = {
+      userid: userid
+    }
+    result = await connection.execute(sqlQuery, binds);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
+}
+
+
+async function getpagetimeline(userid) {
+  let connection;
+  let result;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sqlQuery = `
+SELECT POST_ID FROM (
+SELECT POST_ID, TIME FROM POSTS WHERE USER_ID = :userid
+UNION
+SELECT POST_ID , TIME FROM POSTS WHERE USER_ID IN (SELECT R.USER_ID FROM FOLLOW_LIST F LEFT JOIN RESTAURANT R ON F.RESTAURANT_ID = R.RESTAURANT_ID WHERE F.USER_ID = :userid)
+UNION
+SELECT P.POST_ID , P.TIME FROM POSTS P LEFT JOIN REVIEW_POST R ON (P.POST_ID = R.POST_ID)  WHERE R.RESTAURANT_ID IN (SELECT RESTAURANT_ID FROM FOLLOW_LIST WHERE USER_ID = :userid)
+UNION
+SELECT POST_ID , TIME FROM POSTS WHERE  USER_ID IN (SELECT F.USER_ID FROM PAGE_CONNECTION P LEFT JOIN FOODIE_PAGE F ON (F.PAGE_ID = P.PAGE_ID ) WHERE P.USER_ID = :userid)
+) R
+ORDER BY R.TIME DESC`;
+    const binds = {
+      userid: userid
+    }
+    result = await connection.execute(sqlQuery, binds);
+    result = result.rows;
+  } catch (err) {
+    console.error('Error: ', err);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection: ', err);
+      }
+    }
+  }
+  return result;
 }
