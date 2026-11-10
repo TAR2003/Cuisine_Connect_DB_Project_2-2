@@ -2,13 +2,17 @@
 	import { goto } from '$app/navigation';
 	import jsCookie from 'js-cookie';
 	import { onMount } from 'svelte';
+	import { apiRequest, postJson } from '../../lib/index.js';
 	import { calculatemenuprice, calculatetotaltransaction } from '../../functions';
 
 	let tt = 0;
 	let tmp = 0;
 	onMount(async () => {
-		const response = await fetch('/api/me', { credentials: 'include' });
-		const body = response.ok ? await response.json() : null;
+		const { ok, data: body } = await apiRequest('/api/me', { method: 'GET', json: false });
+		if (!ok) {
+			goto('/');
+			return;
+		}
 		if (!body || !body.ok || body.data.userType !== 'A') {
 			goto('/');
 			return;
@@ -17,7 +21,7 @@
 		tmp = await calculatemenuprice();
 	});
 	async function logout() {
-		await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+		await postJson('/api/logout', {});
 		jsCookie.remove('username');
 		jsCookie.remove('userid');
 		jsCookie.remove('usertype');

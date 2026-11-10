@@ -1,4 +1,5 @@
 <script>
+	import { postForm, postJson } from '../../lib/index.js';
 	import Cookies from 'js-cookie';
 	export let visible;
 	export let onConfirm;
@@ -23,11 +24,7 @@
 		formData.append('postphoto', postpicture);
 
 		try {
-			const response = await fetch('/addreviewpostwithpicture', {
-				method: 'POST',
-				credentials: 'include',
-				body: formData
-			});
+			const response = await postForm('/addreviewpostwithpicture', formData);
 
 			if (response.ok) {
 				console.log('Data uploaded successfully');
@@ -46,14 +43,7 @@
 			menuid: menuid
 		};
 		try {
-			const response = await fetch('/api/addreviewpostwithoutmedia', {
-				method: 'POST',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(s)
-			});
+			const response = await postJson('/api/addreviewpostwithoutmedia', s);
 
 			if (response.ok) {
 				const data = await response.json();

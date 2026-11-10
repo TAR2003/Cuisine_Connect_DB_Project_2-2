@@ -1,4 +1,5 @@
 <script>
+	import { postJson } from '../../lib/index.js';
 	import Cookies from 'js-cookie';
 	export let visible;
 	export let message;
@@ -18,14 +19,7 @@
 			price: price
 		};
 		try {
-			const response = await fetch('/api/addmenu', {
-				method: 'POST',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(s)
-			});
+			const response = await postJson('/api/addmenu', s);
 
 			if (response.ok) {
 				const data = await response.json();

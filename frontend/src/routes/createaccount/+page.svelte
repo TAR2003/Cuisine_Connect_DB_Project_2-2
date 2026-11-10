@@ -1,4 +1,5 @@
 <script>
+	import { postForm, postJson } from '../../lib/index.js';
 	import { goto } from '$app/navigation';
 	import Map from './Map.svelte';
 	import Cookies from 'js-cookie';
@@ -30,14 +31,7 @@
 			username: '@' + userinput
 		};
 		try {
-			const response = await fetch('/api/username', {
-				method: 'POST',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(s)
-			});
+			const response = await postJson('/api/username', s);
 
 			if (response.ok) {
 				const data = await response.json();
@@ -82,11 +76,7 @@
 			formData.append('coverPhoto', coverPhoto);
 
 			try {
-				const response = await fetch('/save-data', {
-					method: 'POST',
-					credentials: 'include',
-					body: formData
-				});
+				const response = await postForm('/save-data', formData);
 
 				if (response.ok) {
 					console.log('Data uploaded successfully');
@@ -112,14 +102,7 @@
 			username: u
 		};
 		try {
-			const response = await fetch('/api/username', {
-				method: 'POST',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(s)
-			});
+			const response = await postJson('/api/username', s);
 
 			if (response.ok) {
 				const data = await response.json();

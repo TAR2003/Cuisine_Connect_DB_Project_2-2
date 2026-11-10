@@ -14,4 +14,6 @@
 
 | 2026-11-10 | ENG-006 | DONE | Registration, friend accept, share, and comment deletion commit once. Post ids come back with RETURNING. Both timeline friend branches require STATUS = 'A'. `MAX(POST_ID)` is gone. |
 
-Current ticket: ENG-007. Next: ENG-007.
+| 2026-11-10 | ENG-007 | DONE | Uploads stay in backend/uploads with a 5 MB allowlist. Identity routes live in backend/src/routes. The frontend calls one client. Express serves the static build when it exists. npm run check reports 0 errors. Session responses are { ok, data }. Other reads stay positional arrays because their pages still index them that way. Oracle was not started, so login in the browser was not exercised. |
+
+Current ticket: ENG-008. Next: ENG-008.

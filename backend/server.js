@@ -9,6 +9,8 @@ const { initPool, getConnection, withTransaction } = require('./src/db');
 const sessionHttp = require('./src/session');
 const { decide, canActAs, canParticipate } = require('./src/authz');
 const { hashPassword, verifyPassword } = require('./src/passwords');
+const { MAX_BYTES, fileFilter, allowedExtension, storedName } = require('./src/uploads');
+const { registerIdentity } = require('./src/routes/identity');
 
 const app = express();
 
@@ -29,43 +31,9 @@ try {
 const port = config.port;
 const uploadDir = path.join(__dirname, 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
-const upload = multer({ dest: uploadDir });
-
-app.post('/api/login', async (req, res) => {
-  try {
-    await sessionHttp.handleLogin(req, res, {
-      config,
-      authenticate: authenticateUser,
-      createSession: (userId) => withDb((connection) => sessionHttp.insertSession(connection, userId))
-    });
-  } catch (error) {
-    console.error('login failed:', error.message);
-    res.status(500).json({ ok: false, error: { code: 'SERVER_ERROR', message: 'Sign-in failed' } });
-  }
-});
-
-app.post('/api/logout', async (req, res) => {
-  try {
-    await sessionHttp.handleLogout(req, res, {
-      config,
-      destroySession: (sessionId) => withDb((connection) => sessionHttp.deleteSession(connection, sessionId))
-    });
-  } catch (error) {
-    console.error('logout failed:', error.message);
-    res.status(500).json({ ok: false, error: { code: 'SERVER_ERROR', message: 'Sign-out failed' } });
-  }
-});
-
-app.get('/api/me', async (req, res) => {
-  try {
-    await sessionHttp.handleMe(req, res, {
-      loadActor: (sessionId) => withDb((connection) => sessionHttp.readActor(connection, sessionId))
-    });
-  } catch (error) {
-    console.error('session lookup failed:', error.message);
-    res.status(500).json({ ok: false, error: { code: 'SERVER_ERROR', message: 'Could not read the session' } });
-  }
-});
+const upload = multer({ dest: uploadDir, limits: { fileSize: MAX_BYTES }, fileFilter });
+app.use('/uploads', express.static(uploadDir));
+registerIdentity(app, { sessionHttp, withDb, authenticateUser, config });
 
 async function enforceRequest(req, res, next) {
   try {
@@ -171,8 +139,12 @@ app.post('/save-data', upload.fields([{ name: 'profilePicture' }, { name: 'cover
   console.log(obj);
   const profilePicture = req.files['profilePicture'][0];
   const coverPhoto = req.files['coverPhoto'][0];
-  const profileextension = path.extname(profilePicture.originalname);
-  const coverextension = path.extname(coverPhoto.originalname);
+  const profileextension = allowedExtension(profilePicture.originalname);
+  const coverextension = allowedExtension(coverPhoto.originalname);
+  if (!profileextension || !coverextension) {
+    res.status(400).send('File type is not allowed');
+    return;
+  }
   console.log(obj);
   let id;
   try {
@@ -190,8 +162,8 @@ app.post('/save-data', upload.fields([{ name: 'profilePicture' }, { name: 'cover
     return;
   }
   // Define paths for saving images
-  const profilePicturePath = path.join('../frontend/src/public/images/' + 'profilephoto' + id + profileextension);
-  const coverPhotoPath = path.join('../frontend/src/public/images/' + 'coverphoto' + id + coverextension);
+  const profilePicturePath = path.join(uploadDir, storedName('profilephoto', id, profilePicture.originalname));
+  const coverPhotoPath = path.join(uploadDir, storedName('coverphoto', id, coverPhoto.originalname));
   try {
     // Copy profile picture to destination and delete temporary file
     fs.copyFile(profilePicture.path, profilePicturePath, (copyProfileError) => {
@@ -223,11 +195,15 @@ app.post('/addpostwithpicture', upload.fields([{ name: 'postphoto' }]), async (r
   const obj = req.body;
   console.log(obj);
   const postPicture = req.files['postphoto'][0];
-  const postextension = path.extname(postPicture.originalname);
+  const postextension = allowedExtension(postPicture.originalname);
+  if (!postextension) {
+    res.status(400).send('File type is not allowed');
+    return;
+  }
   console.log(obj);
   let id = await addnewpost(obj.userid, postextension, obj.caption);
 
-  const postPicturePath = path.join('../frontend/src/public/images/' + 'postphoto' + id + postextension);
+  const postPicturePath = path.join(uploadDir, storedName('postphoto', id, postPicture.originalname));
   try {
     // Copy profile picture to destination and delete temporary file
     fs.copyFile(postPicture.path, postPicturePath, (copyProfileError) => {
@@ -250,11 +226,15 @@ app.post('/addreviewpostwithpicture', upload.fields([{ name: 'postphoto' }]), as
   const obj = req.body;
   console.log(obj);
   const postPicture = req.files['postphoto'][0];
-  const postextension = path.extname(postPicture.originalname);
+  const postextension = allowedExtension(postPicture.originalname);
+  if (!postextension) {
+    res.status(400).send('File type is not allowed');
+    return;
+  }
   console.log(obj);
   let id = await addnewreviewpost(obj.userid, postextension, obj.caption, obj.menuid, obj.rating);
 
-  const postPicturePath = path.join('../frontend/src/public/images/' + 'postphoto' + id + postextension);
+  const postPicturePath = path.join(uploadDir, storedName('postphoto', id, postPicture.originalname));
   await updatemenurating(obj.menuid);
   try {
     // Copy profile picture to destination and delete temporary file
@@ -1175,7 +1155,7 @@ async function insertUsers(username, password, name, mobileno, email, type, x, y
   try {
     if (!connection) connection = await getConnection();
     const passwordHash = await hashPassword(password);
-    const sqlQuery = `INSERT INTO USERS VALUES(USER_ID_SEQ.NEXTVAL, :username , :name , :password, :email, :type, :mobileno ,:x, :y, SYSDATE, 'A', '/src/public/images/profilephoto' || USER_ID_SEQ.NEXTVAL || :profile,'/src/public/images/coverphoto' || USER_ID_SEQ.NEXTVAL ||  :cover)`;
+    const sqlQuery = `INSERT INTO USERS VALUES(USER_ID_SEQ.NEXTVAL, :username , :name , :password, :email, :type, :mobileno ,:x, :y, SYSDATE, 'A', '/uploads/profilephoto' || USER_ID_SEQ.NEXTVAL || :profile,'/uploads/coverphoto' || USER_ID_SEQ.NEXTVAL ||  :cover)`;
 
     const binds = {
       username: username,
@@ -1446,7 +1426,7 @@ async function addnewpost(userid, photo, caption) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'N') RETURNING POST_ID INTO :id`;
+    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/uploads/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'N') RETURNING POST_ID INTO :id`;
     const binds = {
       userid: userid,
       photo: photo,
@@ -2398,7 +2378,7 @@ async function addnewreviewpost(userid, photo, caption, menuid, rating) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'R') RETURNING POST_ID INTO :id`;
+    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/uploads/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'R') RETURNING POST_ID INTO :id`;
     const binds = {
       userid: userid,
       photo: photo,
@@ -4176,6 +4156,15 @@ ORDER BY R.TIME DESC`;
     }
   }
   return result;
+}
+
+const frontendBuild = path.join(__dirname, '../frontend/build');
+if (fs.existsSync(frontendBuild)) {
+  app.use(express.static(frontendBuild));
+  app.get('*', (req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    res.sendFile(path.join(frontendBuild, 'index.html'));
+  });
 }
 
 async function start() {
