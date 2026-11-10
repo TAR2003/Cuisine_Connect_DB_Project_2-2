@@ -1,3 +1,4 @@
+-- NOT AN INSTALLER. Scratch notebook kept for history. Do not run this against a database you care about.
 INSERT INTO USERS VALUES(1,'newuser1','user1', 'JANINA1', 'uradhu1r1@gmail.com','P',
 '01010111111', NULL, NULL, 'C://USRRES1.JPG', 'C://K1.JPG');
 INSERT INTO USERS VALUES(3,'newuser3','user2', 'JANINA2', 'uradhu2r@gmail.com','P',

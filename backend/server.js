@@ -3,34 +3,30 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const oracledb = require('oracledb');
+const { loadEnvFile, loadConfig } = require('./src/config');
+const { initPool, getConnection } = require('./src/db');
 
 const app = express();
-const oracledb = require('oracledb');
-const { log } = require('console');
+
+loadEnvFile(path.join(__dirname, '.env'));
 
 let picname = '';
-
-
-//const upload = multer({ storage: storage });
-
 let a = 120;
 app.use(cors());
+app.use(express.json());
 
-app.use(express.json()); // Parse JSON requests
-
-const port = process.env.PORT || 3001;
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-
-
-const dbConfig = {
-  user: 'CuisineConnect',
-  password: '12345',
-  connectString: 'localhost/ORCLPDB'
-};
-
-const upload = multer({ dest: 'uploads/' });
+let config;
+try {
+  config = loadConfig();
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
+const port = config.port;
+const uploadDir = path.join(__dirname, 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({ dest: uploadDir });
 
 app.post('/save-data', upload.fields([{ name: 'profilePicture' }, { name: 'coverPhoto' }]), async (req, res) => {
   const obj = req.body;
@@ -887,16 +883,6 @@ app.post('/api/getpagetimeline', async (req, res) => {
 
 
 
-function getFileExtension(imagePath) {
-  const buffer = fs.readFileSync(imagePath);
-  const type = imageType(buffer);
-
-  if (type) {
-    return '.' + type.ext;
-  }
-
-  return '';
-}
 
 
 
@@ -905,7 +891,7 @@ async function run(a) {
   let result;
   try {
     console.log('till now');
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'select * FROM USERS where USER_ID = ' + a;
     result = await connection.execute(sqlQuery);
     const sql2 = `select CHECK_PASS('CLA1', 'PASSWORD1') AS RES FROM DUAL`;
@@ -943,7 +929,7 @@ async function newuser() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = "INSERT INTO USERS VALUES(USER_ID_SEQ.NEXTVAL , :vusername, :vname, :vpassword, :vemail, :vusertype, :vmobileno, :vx, :vy, :vprofile, :vcover)";
     const binds = {
       vusername: 'newest user ',
@@ -988,7 +974,7 @@ async function checkUniqueUsername(username1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT COUNT(*) FROM USERS where USER_NAME = :username';
     const binds = {
       username: username1
@@ -1013,7 +999,7 @@ async function checkAuthentication(username1, password1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT CHECK_PASS(:username, :password) FROM DUAL';
     const binds = {
       username: username1,
@@ -1040,7 +1026,7 @@ async function getUserType(username1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT USER_TYPE FROM USERS WHERE USER_NAME = :username`;
     const binds = {
       username: username1,
@@ -1066,7 +1052,7 @@ async function insertUsers(username, password, name, mobileno, email, type, x, y
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO USERS VALUES(USER_ID_SEQ.NEXTVAL, :username , :name , ORA_HASH(:password), :email, :type, :mobileno ,:x, :y, SYSDATE, 'A', '/src/public/images/profilephoto' || USER_ID_SEQ.NEXTVAL || :profile,'/src/public/images/coverphoto' || USER_ID_SEQ.NEXTVAL ||  :cover)`;
 
     const binds = {
@@ -1110,7 +1096,7 @@ async function insertCustomer(id1, date1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO CUSTOMER VALUES(CUSTOMER_ID_SEQ.NEXTVAL , :id1, TO_DATE( :date1, 'YYYY-MM-DD'), 0)`;
     const binds = {
       id1: id1,
@@ -1138,7 +1124,7 @@ async function insertRestaurant(id1, date1) {
   let result;
   try {
     console.log(date1);
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO Restaurant VALUES(RESTAURANT_ID_SEQ.NEXTVAL , :id1, TO_DATE( :date1, 'YYYY-MM-DD'), 0)`;
     const binds = {
       id1: id1,
@@ -1167,7 +1153,7 @@ async function insertPage(id1, date1) {
   let result;
   try {
     console.log(date1);
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO FOODIE_PAGE VALUES( :id1, PAGE_ID_SEQ.NEXTVAL , TO_DATE( :date1, 'YYYY-MM-DD'))`;
     const binds = {
       id1: id1,
@@ -1195,7 +1181,7 @@ async function getID(username1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT USER_ID FROM USERS WHERE USER_NAME = :username1';
     const binds = {
       username1: username1
@@ -1221,7 +1207,7 @@ async function getPostinfo(postid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT * FROM POSTS WHERE POST_ID =  :postid';
     const binds = {
       postid: postid
@@ -1247,7 +1233,7 @@ async function getUserinfo(username1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT * FROM USERS WHERE USER_NAME = :username1';
     const binds = {
       username1: username1
@@ -1272,7 +1258,7 @@ async function getUserinfoid(id1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT * FROM USERS WHERE USER_ID = :id1';
     const binds = {
       id1: id1
@@ -1299,7 +1285,7 @@ async function getprofilepicture(id1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT PROFILE_PICTURE FROM USERS WHERE USER_ID = :id1';
     const binds = {
       id1: id1
@@ -1325,7 +1311,7 @@ async function getcomments(postid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT * FROM COMMENTS WHERE POST_ID = :postid ORDER BY TIME';
     const binds = {
       postid: postid
@@ -1351,7 +1337,7 @@ async function addcomments(postid, userid, caption) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'INSERT INTO COMMENTS VALUES(COMMENT_ID_SEQ.NEXTVAL, :postid, :userid, :caption, SYSDATE)';
     const binds = {
       postid: postid,
@@ -1379,7 +1365,7 @@ async function addnewpost(userid, photo, caption) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'N')`;
     const binds = {
       userid: userid,
@@ -1411,7 +1397,7 @@ async function addnewpostwithoutpicture(userid, caption) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0, NULL , :caption, SYSDATE, 'N')`;
     const binds = {
       userid: userid,
@@ -1438,7 +1424,7 @@ async function getAllPosts() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT POST_ID FROM POSTS ORDER BY TIME DESC';
     result = await connection.execute(sqlQuery);
     result = result.rows;
@@ -1461,7 +1447,7 @@ async function removereact(postid, userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `DELETE FROM REACTS WHERE POST_ID = :postid AND USER_ID = :userid`;
     const binds = {
       userid: userid,
@@ -1493,7 +1479,7 @@ async function addreact(postid, userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO REACTS VALUES (:postid, :userid, 'L')`;
     const binds = {
       userid: userid,
@@ -1520,7 +1506,7 @@ async function reactsituation(postid, userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT COUNT(*) FROM REACTS WHERE POST_ID = :postid AND USER_ID = :userid`;
     const binds = {
       userid: userid,
@@ -1547,7 +1533,7 @@ async function addshare(postid, userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO POSTS VALUES (POST_ID_SEQ.NEXTVAL , :userid, 0,0,0,NULL, NULL, SYSDATE, 'S')`;
     const binds = {
       userid: userid
@@ -1588,7 +1574,7 @@ async function addshare(postid, userid) {
 async function addshare1(postid, userid) {
   let connection;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
 
     // Insert a new post into POSTS
     const sqlQuery = `INSERT INTO POSTS VALUES (POST_ID_SEQ.NEXTVAL, :userid, 0, 0, 0, NULL, NULL, SYSDATE, 'S')`;
@@ -1639,7 +1625,7 @@ async function getshare(postid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT ORIGIN_ID FROM SHARE_POST WHERE POST_ID = :postid`;
     const binds = {
       postid: postid
@@ -1671,7 +1657,7 @@ async function getAllProfilePosts(userid) {
   let result;
   try {
     console.log('profile posts ' + userid);
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT * FROM POSTS WHERE USER_ID = :userid  ORDER BY TIME desc`;
     const binds = {
       userid: userid
@@ -1700,7 +1686,7 @@ async function giverequest(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO FRIEND_REQUEST VALUES((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1), (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) , 'P')`
     const binds = {
       userid1: userid1,
@@ -1727,7 +1713,7 @@ async function deleterequest(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `DELETE FROM FRIEND_REQUEST WHERE (((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C1_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C2_ID) OR ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C2_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C1_ID)) AND STATUS = 'P'`
     const binds = {
       userid1: userid1,
@@ -1755,7 +1741,7 @@ async function acceptRequest(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE FRIEND_REQUEST SET STATUS = 'A' WHERE (((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C1_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C2_ID) OR ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C2_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C1_ID)) AND STATUS = 'P'`;
     const binds = {
       userid1: userid1,
@@ -1792,7 +1778,7 @@ async function getFriendRequestStatus(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT C1_ID, C2_ID, STATUS FROM FRIEND_REQUEST WHERE ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C1_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C2_ID) OR ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C1_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C2_ID)`;
     const binds = {
       userid1: userid1,
@@ -1828,7 +1814,7 @@ async function unfriend(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `DELETE FROM FRIEND_REQUEST WHERE (((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C1_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C2_ID) OR ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C2_ID AND (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid2) = C1_ID)) AND STATUS = 'A'`
     const binds = {
       userid1: userid1,
@@ -1866,7 +1852,7 @@ async function getallfriendrequests(userid1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT (SELECT USER_ID FROM CUSTOMER WHERE CUSTOMER_ID = F.C1_ID) 
       FROM FRIEND_REQUEST F
@@ -1895,7 +1881,7 @@ async function getallfriends(userid1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT CASE WHEN C1_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) THEN (SELECT USER_ID FROM CUSTOMER WHERE CUSTOMER_ID = C2_ID) ELSE (SELECT USER_ID FROM CUSTOMER WHERE CUSTOMER_ID = C1_ID) END AS USRID
       FROM FRIEND_REQUEST
       WHERE ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) = C1_ID OR
@@ -1924,7 +1910,7 @@ async function getinbox(userid1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT CASE WHEN USER1_ID = :userid1 THEN USER2_ID ELSE USER1_ID END AS correspondent,
       MAX(TIME) AS max_time
 FROM MESSAGES
@@ -1957,7 +1943,7 @@ async function getmessages(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT * FROM MESSAGES WHERE (USER1_ID = :userid1 AND USER2_ID = :userid2) OR (USER2_ID = :userid1 AND USER1_ID = :userid2) ORDER BY TIME`;
     const binds = {
       userid1: userid1,
@@ -1983,7 +1969,7 @@ async function insertmessage(userid1, userid2, caption) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO MESSAGES VALUES(:userid1,:userid2,:caption ,NULL, SYSDATE)`;
     const binds = {
       userid1: userid1,
@@ -2011,7 +1997,7 @@ async function getreviewpost(postid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `select * FROM ((REVIEW_POST R LEFT JOIN MENU M ON R.MENU_ID = M.MENU_ID) LEFT JOIN RESTAURANT RS ON (M.RESTAURANT_ID = RS.RESTAURANT_ID)) LEFT JOIN USERS U ON (U.USER_ID = RS.USER_ID) WHERE POST_ID = :postid`
     const binds = {
       postid: postid
@@ -2037,7 +2023,7 @@ async function getmenublockinfo(menuid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `select * FROM (MENU M LEFT JOIN RESTAURANT RS ON (M.RESTAURANT_ID = RS.RESTAURANT_ID)) LEFT JOIN USERS U ON (U.USER_ID = RS.USER_ID) WHERE MENU_ID = :menuid`
     const binds = {
       menuid: menuid
@@ -2062,7 +2048,7 @@ async function updaterestaurantrating(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE RESTAURANT SET AVERAGE_RATING = (SELECT AVG(RATING) FROM REVIEW_POST r left JOIN RESTAURANT RS ON R.RESTAURANT_ID = RS.RESTAURANT_ID WHERE RS.USER_ID = :userid) WHERE USER_ID = :userid`
     const binds = {
       userid: userid
@@ -2088,7 +2074,7 @@ async function updatemenurating(menuid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE MENU SET AVERAGE_RATING = (SELECT AVG(RATING) FROM REVIEW_POST WHERE MENU_ID = :menuid) WHERE MENU_ID = :menuid`
     const binds = {
       menuid: menuid
@@ -2114,7 +2100,7 @@ async function getmenureviewposts(menuid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `select POST_ID from REVIEW_POST where MENU_ID = :menuid`
     const binds = {
       menuid: menuid
@@ -2142,7 +2128,7 @@ async function getrestaurantreviewposts(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `select R.POST_ID from REVIEW_POST R LEFT JOIN RESTAURANT RS ON R.RESTAURANT_ID = RS.RESTAURANT_ID WHERE RS.USER_ID = :userid`
     const binds = {
       userid: userid
@@ -2170,7 +2156,7 @@ async function getmenu(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT M.MENU_ID FROM MENU M LEFT JOIN RESTAURANT R ON R.RESTAURANT_ID = M.RESTAURANT_ID WHERE R.USER_ID = :userid`
     const binds = {
       userid: userid
@@ -2198,7 +2184,7 @@ async function unfollow(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `DELETE FROM FOLLOW_LIST WHERE USER_ID = :userid1 AND RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2) `
     const binds = {
       userid1: userid1,
@@ -2225,7 +2211,7 @@ async function setfollow(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO FOLLOW_LIST VALUES(:userid1, (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2), SYSDATE)`;
     const binds = {
       userid1: userid1,
@@ -2254,7 +2240,7 @@ async function getfollowstatus(userid1, userid2) {
   let result;
   try {
     console.log(userid1 + " -----  " + userid2)
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT count(*) FROM FOLLOW_LIST WHERE USER_ID = :userid1 AND (RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2)) `
     const binds = {
       userid1: userid1,
@@ -2281,7 +2267,7 @@ async function getrestaurantrating(userid1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT AVERAGE_RATING FROM RESTAURANT WHERE USER_ID = :userid1`
     const binds = {
       userid1: userid1
@@ -2305,7 +2291,7 @@ async function getfollowlist(userid1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT F.USER_ID FROM FOLLOW_LIST F LEFT JOIN RESTAURANT R ON (F.RESTAURANT_ID = R.RESTAURANT_ID) WHERE R.USER_ID = :userid1`
     const binds = {
@@ -2332,7 +2318,7 @@ async function addnewreviewpost(userid, photo, caption, menuid, rating) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'R')`;
     const binds = {
       userid: userid,
@@ -2374,7 +2360,7 @@ async function addnewreviewpostwithoutpicture(userid, caption, rating, menuid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0, NULL , :caption, SYSDATE, 'R')`;;
     const binds = {
       userid: userid,
@@ -2408,7 +2394,7 @@ async function findusername(u) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, USER_TYPE, PROFILE_PICTURE FROM USERS WHERE UPPER(USER_NAME) LIKE UPPER(:u) ORDER BY UPPER(USER_NAME)`;
     const binds = {
       u: u + '%'
@@ -2432,7 +2418,7 @@ async function findname(u) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, USER_TYPE, PROFILE_PICTURE FROM USERS WHERE UPPER(NAME) LIKE UPPER(:u1) OR UPPER(NAME) LIKE UPPER(:u2) ORDER BY UPPER(NAME)`;
     const binds = {
       u1: u + '%',
@@ -2458,7 +2444,7 @@ async function deletepost(postid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = ` BEGIN
         :result := DELETE_POST(:postid);
       END;
@@ -2488,7 +2474,7 @@ async function deletecomment(commentid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `DELETE FROM COMMENTS WHERE COMMENT_ID = :commentid`;
     const binds = {
       commentid: commentid
@@ -2519,7 +2505,7 @@ async function getnearbyrestaurants(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT USER_ID FROM USERS WHERE USER_TYPE = 'R' 
       ORDER BY (POWER((LOCATION_X - (SELECT LOCATION_X FROM USERS WHERE USER_ID = :userid)),2) + POWER((LOCATION_Y - (SELECT LOCATION_Y FROM USERS WHERE USER_ID = :userid)),2))`;
     const binds = {
@@ -2548,7 +2534,7 @@ async function getfollowedrestaurants(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = 'SELECT U.USER_ID FROM (FOLLOW_LIST F JOIN RESTAURANT R ON F.RESTAURANT_ID = R.RESTAURANT_ID) JOIN USERS U ON(R.USER_ID = U.USER_ID) WHERE F.USER_ID = :userid'
     const binds = {
       userid: userid
@@ -2576,7 +2562,7 @@ async function addconnection(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO PAGE_CONNECTION VALUES (:userid1, (select PAGE_ID FROM FOODIE_PAGE WHERE USER_ID = :userid2), SYSDATE)`;
     const binds = {
       userid1: userid1,
@@ -2603,7 +2589,7 @@ async function removeconnection(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `delete from PAGE_CONNECTION where USER_ID = :userid1 AND PAGE_ID = (SELECT PAGE_ID FROM FOODIE_PAGE WHERE USER_ID = :userid2)`;
     const binds = {
       userid1: userid1,
@@ -2630,7 +2616,7 @@ async function connectionstatus(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT COUNT(*) FROM PAGE_CONNECTION P JOIN FOODIE_PAGE F ON (P.PAGE_ID = F.PAGE_ID) JOIN USERS U ON (U.USER_ID = F.USER_ID ) WHERE P.USER_ID = :userid1 AND U.USER_ID = :userid2`
     const binds = {
@@ -2660,7 +2646,7 @@ async function getconnectedpage(userid1) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT F.USER_ID FROM PAGE_CONNECTION C JOIN FOODIE_PAGE F ON ( C.PAGE_ID = F.PAGE_ID) WHERE C.USER_ID = :userid1 `
     const binds = {
       userid1: userid1
@@ -2688,7 +2674,7 @@ async function addmenu(userid1, menuname, price) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `INSERT INTO MENU VALUES (MENU_ID_SEQ.NEXTVAL, (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID =:userid1), :menuname , :price, 0)`;
     const binds = {
       userid1: userid1,
@@ -2716,7 +2702,7 @@ async function updaterestaurantrating(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE RESTAURANT SET AVERAGE_RATING = (SELECT AVG(RATING) FROM REVIEW_POST WHERE RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID=:userid)) WHERE USER_ID = :userid`;
     const binds = {
       userid: userid
@@ -2743,7 +2729,7 @@ async function getcurrentorders(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT ORDER_ID FROM FOODORDER WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid) AND STATUS <> 'D' AND STATUS <> 'R' AND STATUS <> 'U'        
       `;
@@ -2774,7 +2760,7 @@ async function getallorders(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT ORDER_ID FROM FOODORDER WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid) AND STATUS <> 'U'
       `;
     const binds = {
@@ -2802,7 +2788,7 @@ async function delivered(orderid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE FOODORDER SET STATUS = 'D' WHERE ORDER_ID = :orderid `
     const binds = {
       orderid: orderid
@@ -2829,7 +2815,7 @@ async function ontheway(orderid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE FOODORDER SET STATUS = 'I' WHERE ORDER_ID = :orderid `
     const binds = {
       orderid: orderid
@@ -2856,7 +2842,7 @@ async function preparing(orderid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE FOODORDER SET STATUS = 'P' WHERE ORDER_ID = :orderid `
     const binds = {
       orderid: orderid
@@ -2883,7 +2869,7 @@ async function removefromcart(orderid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `DELETE FROM FOODORDER WHERE ORDER_ID = :orderid and STATUS = 'U'`;
     const binds = {
       orderid: orderid
@@ -2910,7 +2896,7 @@ async function clearcart(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `DELETE FROM FOODORDER WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid) AND STATUS = 'U' `;
     const binds = {
       userid: userid
@@ -2937,7 +2923,7 @@ async function finalizecart(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE FOODORDER SET STATUS = 'O' WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid) AND STATUS = 'U' `;
     const binds = {
       userid: userid
@@ -2962,7 +2948,7 @@ async function finalizecart(userid) {
 
 async function decreaseamount(orderid) {
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       UPDATE FOODORDER F SET AMOUNT = AMOUNT - 1, TOTALPRICE = TOTALPRICE - (SELECT PRICE FROM MENU WHERE MENU_ID = F.MENU_ID) WHERE F.ORDER_ID = :orderid
       `;
@@ -2989,7 +2975,7 @@ async function decreaseamount(orderid) {
 
 async function increaseamount(orderid) {
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       UPDATE FOODORDER F SET AMOUNT = AMOUNT + 1, TOTALPRICE = TOTALPRICE + (SELECT PRICE FROM MENU WHERE MENU_ID = F.MENU_ID) WHERE F.ORDER_ID = :orderid
       `;
@@ -3019,7 +3005,7 @@ async function insertorder(userid1, menuid, userid2, amount) {
   let result;
   let r = 0;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sql = `select COUNT(*) FROM FOODORDER WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) AND MENU_ID = :menuid AND STATUS = 'U'`;
     const b = {
       userid1: userid1,
@@ -3061,7 +3047,7 @@ async function getorderinfo(orderid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
 SELECT * FROM FOODORDER F LEFT JOIN MENU M ON F.MENU_ID = M.MENU_ID LEFT JOIN
 RESTAURANT R ON R.RESTAURANT_ID = M.RESTAURANT_ID LEFT JOIN USERS U ON U.USER_ID = R.USER_ID LEFT JOIN CUSTOMER C ON F.CUSTOMER_ID = C.CUSTOMER_ID
@@ -3091,7 +3077,7 @@ async function getcart(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT ORDER_ID FROM FOODORDER WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid) AND STATUS = 'U'
       ORDER BY TIME DESC`;
     const binds = {
@@ -3121,7 +3107,7 @@ async function pendingorders(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT ORDER_ID FROM FOODORDER WHERE RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid) AND STATUS <> 'U' AND STATUS <> 'D' ORDER BY TIME DESC`
     const binds = {
@@ -3147,7 +3133,7 @@ async function allrestaurantorders(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT ORDER_ID FROM FOODORDER WHERE RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid) AND STATUS <> 'U' ORDER BY TIME DESC`;
     const binds = {
@@ -3174,7 +3160,7 @@ async function reservationstatus(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT COUNT(*) FROM RESERVATIONS WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) AND RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2)`
     const binds = {
       userid1: userid1,
@@ -3200,7 +3186,7 @@ async function removereservation(userid1, userid2) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `        
       DELETE FROM RESERVATIONS WHERE CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1) AND RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2)`;
     const binds = {
@@ -3228,7 +3214,7 @@ async function insertreservation(userid1, userid2, time) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `        
       INSERT INTO RESERVATIONS VALUES ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1),(SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2), 1, TO_DATE(:time, 'YYYY-MM-DD'))`;
     const binds = {
@@ -3257,7 +3243,7 @@ async function alluserreservations(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
     SELECT R.*, ( SELECT RS.USER_ID FROM RESTAURANT RS WHERE RS.RESTAURANT_ID = R.RESTAURANT_ID )  FROM RESERVATIONS R WHERE R.CUSTOMER_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid AND TIME > SYSDATE) ORDER BY R.TIME`;
     const binds = {
@@ -3284,7 +3270,7 @@ async function allrestaurantreservations(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
     SELECT R.*, ( SELECT C.USER_ID FROM CUSTOMER C WHERE C.CUSTOMER_ID = R.CUSTOMER_ID )  FROM RESERVATIONS R WHERE R.RESTAURANT_ID = (SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid AND TIME > SYSDATE) ORDER BY R.TIME`;
     const binds = {
@@ -3310,7 +3296,7 @@ async function removepastreservations() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       BEGIN DELETE_LATE_RESERVATIONS; END ;`;
     const binds = {
@@ -3338,7 +3324,7 @@ async function deleteaccount(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       DELETE FROM USERS WHERE USER_ID = :userid`;
     const binds = {
@@ -3366,7 +3352,7 @@ async function rinfo(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT * FROM RESTAURANT WHERE USER_ID = :userid`;
     const binds = {
@@ -3395,7 +3381,7 @@ async function cinfo(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT * FROM CUSTOMER WHERE USER_ID = :userid`;
     const binds = {
@@ -3425,7 +3411,7 @@ async function pinfo(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT * FROM FOODIE_PAGE WHERE USER_ID = :userid`;
     const binds = {
@@ -3454,7 +3440,7 @@ async function seen(nid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       UPDATE NOTIFICATION SET STATUS = 'R' WHERE NOTIFICATION_ID = :nid`;
     const binds = {
@@ -3482,7 +3468,7 @@ async function getpostnotification(nid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT POST_ID FROM POST_NOTIFICATION WHERE NOTIFICATION_ID = :nid`;
     const binds = {
@@ -3511,7 +3497,7 @@ async function getordernotification(nid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT ORDER_ID FROM ORDER_NOTIFICATION WHERE NOTIFICATION_ID = :nid`;
     const binds = {
@@ -3540,7 +3526,7 @@ async function getallnotification(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT * FROM NOTIFICATION WHERE USER_ID = :userid ORDER BY TIME DESC`;
     const binds = {
@@ -3571,7 +3557,7 @@ async function adminlog(username, act, f) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
     INSERT INTO ADMIN_LOG VALUES(ACTIVITY_ID_SEQ.NEXTVAL, :act, SYSDATE, (SELECT USER_ID FROM USERS WHERE USER_NAME = :username), :f, NULL)
     `;
@@ -3602,7 +3588,7 @@ async function alog(userid, act, f) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
     INSERT INTO ADMIN_LOG VALUES(ACTIVITY_ID_SEQ.NEXTVAL, :act, SYSDATE, :userid, :f, NULL)
     `;
@@ -3632,7 +3618,7 @@ async function calculatemenuprice() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = ` BEGIN
       COUNT_TOTAL_MENU_PRICE(:r);
       END;
@@ -3662,7 +3648,7 @@ async function calculatetotaltransaction() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = ` BEGIN
       COUNT_TRANSACTION_FOR_ALL(:r);
       END;
@@ -3692,7 +3678,7 @@ async function calculaterestauranttransaction(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = ` BEGIN
       COUNT_TRANSACTION(:userid, :r);
       END;
@@ -3724,7 +3710,7 @@ async function calculaterestaurantmenutransaction(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = ` BEGIN
       COUNT_MENU_TRANSACTION(:userid, :r);
       END;
@@ -3756,7 +3742,7 @@ async function getadminlog() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT * FROM ADMIN_LOG ORDER BY TIME DESC
       `;
     result = await connection.execute(sqlQuery);
@@ -3781,7 +3767,7 @@ async function getallusers() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT * FROM USERS ORDER BY USER_ID
       `;
     result = await connection.execute(sqlQuery);
@@ -3804,7 +3790,7 @@ async function getallcustomers() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT * FROM CUSTOMER C LEFT JOIN USERS U ON U.USER_ID = C.USER_ID ORDER BY C.CUSTOMER_ID
       `;
@@ -3828,7 +3814,7 @@ async function getallrestaurants() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT * FROM RESTAURANT R LEFT JOIN USERS U ON U.USER_ID = R.USER_ID ORDER BY R.RESTAURANT_ID       
       `;
     result = await connection.execute(sqlQuery);
@@ -3851,7 +3837,7 @@ async function getallpages() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT * FROM FOODIE_PAGE F LEFT JOIN USERS U ON U.USER_ID = F.USER_ID ORDER BY F.PAGE_ID             
       `;
@@ -3877,7 +3863,7 @@ async function getallmenu() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
       SELECT * FROM MENU M LEFT JOIN RESTAURANT R ON M.RESTAURANT_ID = R.RESTAURANT_ID LEFT JOIN USERS U ON R.USER_ID = U.USER_ID ORDER BY MENU_ID   
       `;
@@ -3902,7 +3888,7 @@ async function getallorders1() {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `SELECT * FROM FOODORDER F LEFT JOIN CUSTOMER C ON F.CUSTOMER_ID = C.CUSTOMER_ID LEFT JOIN USERS U ON U.USER_ID = C.USER_ID LEFT JOIN RESTAURANT R ON F.RESTAURANT_ID = R.RESTAURANT_ID LEFT JOIN USERS U1 ON U1.USER_ID = R.USER_ID LEFT JOIN MENU M ON M.MENU_ID = F.MENU_ID ORDER BY ORDER_ID  
       `;
     result = await connection.execute(sqlQuery);
@@ -3926,8 +3912,7 @@ async function updatepassword(userid, password) {
   let connection;
   let result;
   try {
-    console.log(' here in the unvkton ' + userid + " " + password);
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE USERS SET  LAST_UPDATE = SYSDATE , PASSWORD = ORA_HASH(:password) WHERE USER_ID = :userid`;
     const binds = {
       userid: userid,
@@ -3954,7 +3939,7 @@ async function updatepost(postid, caption) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `UPDATE  POSTS SET TIME = SYSDATE , CAPTION = :caption WHERE POST_ID = :postid `;
     const binds = {
       postid: postid,
@@ -3981,7 +3966,7 @@ async function getcustomertimeline(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
 SELECT POST_ID FROM (
 SELECT	POST_ID, TIME
@@ -4028,7 +4013,7 @@ async function getrestauranttimeline(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
 SELECT POST_ID FROM (
 SELECT POST_ID, TIME FROM POSTS WHERE USER_ID = :userid
@@ -4067,7 +4052,7 @@ async function getpagetimeline(userid) {
   let connection;
   let result;
   try {
-    connection = await oracledb.getConnection(dbConfig);
+    connection = await getConnection();
     const sqlQuery = `
 SELECT POST_ID FROM (
 SELECT POST_ID, TIME FROM POSTS WHERE USER_ID = :userid
@@ -4096,4 +4081,20 @@ ORDER BY R.TIME DESC`;
     }
   }
   return result;
+}
+
+async function start() {
+  try {
+    await initPool();
+  } catch (error) {
+    console.error('Database pool failed:', error.message);
+    process.exit(1);
+  }
+  app.listen(port, () => {
+    console.log('Server is running on port ' + port);
+  });
+}
+
+if (require.main === module) {
+  start();
 }

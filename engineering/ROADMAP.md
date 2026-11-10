@@ -4,8 +4,8 @@ Approved target: privately deployable Cuisine Connect. One Node API, the current
 
 | ID | Title | Depends on | Status |
 |---|---|---|---|
-| ENG-001 | Secrets, pool, and a single entry point | — | READY |
-| ENG-002 | httpOnly session and same-origin API | ENG-001 | BACKLOG |
+| ENG-001 | Secrets, pool, and a single entry point | — | DONE |
+| ENG-002 | httpOnly session and same-origin API | ENG-001 | READY |
 | ENG-003 | Authorization and account disable | ENG-002 | BACKLOG |
 | ENG-004 | bcrypt password storage | ENG-003 | BACKLOG |
 | ENG-005 | Ordered schema rebuild | ENG-004 | BACKLOG |

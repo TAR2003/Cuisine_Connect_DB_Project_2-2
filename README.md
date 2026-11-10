@@ -179,13 +179,7 @@ frontend/src/
    ```
 
 2. **Configure Database Connection**:
-   ```javascript
-   const dbConfig = {
-     user: 'CuisineConnect',
-     password: '12345',
-     connectString: 'localhost/ORCLPDB'
-   };
-   ```
+   Copy `backend/.env.example` to `backend/.env` and set `ORACLE_USER`, `ORACLE_PASSWORD`, and `ORACLE_CONNECT_STRING`. Do not commit `.env`. The previous database password was committed in this repository and must be rotated in Oracle before the database is reachable from any machine you do not control. This README does not contain the new password.
 
 ### Backend Setup
 1. **Navigate to backend directory**:
@@ -198,11 +192,11 @@ frontend/src/
    npm install
    ```
 
-3. **Start the server**:
+3. **Start the server** from `backend/`:
    ```bash
-   node server.js
+   npm start
    ```
-   Server will run on `http://localhost:3001`
+   The only entry point is `backend/server.js`. It listens on `PORT` from `.env`, or 3001. The root `server.js` and `index.html` files are not part of the application.
 
 ### Frontend Setup
 1. **Navigate to frontend directory**:
@@ -243,8 +237,7 @@ Cuisine_Connect_DB_Project_2-2/
 ├── add.sql                     # Sample data and complex queries
 ├── ebnquery.sql               # Development and testing queries
 ├── drop tables - Copy.sql     # Table cleanup scripts
-├── server.js                  # Alternative server entry point
-├── index.html                 # Basic HTML interface
+├── database/scratch/          # Old notebooks. Not installers.
 └── B1_05_ERD_Cuisine_Connect.pdf  # Entity Relationship Diagram
 ```
 

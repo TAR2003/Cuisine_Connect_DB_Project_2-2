@@ -16,7 +16,6 @@
 			Cookies.set('username', 'admin');
 			goto('/Admin');
 		}
-		console.log(username + ' ' + password);
 		let v = await getAuthentication(username, password);
 		console.log('authentication status ' + v);
 		if (v == null) showredborder = true;
