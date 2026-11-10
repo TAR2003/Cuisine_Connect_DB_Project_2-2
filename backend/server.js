@@ -8,6 +8,7 @@ const { loadEnvFile, loadConfig } = require('./src/config');
 const { initPool, getConnection } = require('./src/db');
 const sessionHttp = require('./src/session');
 const { decide, canActAs, canParticipate } = require('./src/authz');
+const { hashPassword, verifyPassword } = require('./src/passwords');
 
 const app = express();
 
@@ -142,16 +143,16 @@ async function withDb(work) {
 
 async function authenticateUser(username, password) {
   const normalized = String(username).startsWith('@') ? String(username) : '@' + username;
-  const passed = await checkAuthentication(normalized, password);
-  if (String(passed) !== '1') return null;
   return withDb(async (connection) => {
     const result = await connection.execute(
-      `SELECT USER_ID, USER_NAME, USER_TYPE, ACTIVE_STATUS, NAME
+      `SELECT USER_ID, USER_NAME, USER_TYPE, ACTIVE_STATUS, NAME, PASSWORD
        FROM USERS WHERE USER_NAME = :username`,
       { username: normalized }
     );
     const row = result.rows && result.rows[0];
     if (!row) return null;
+    const matches = await verifyPassword(password, row[5]);
+    if (!matches) return null;
     return {
       userId: row[0],
       userName: row[1],
@@ -294,11 +295,8 @@ app.post('/api/username', async (req, res) => {
   }
 
   else if (s.title == ('getauthentication')) {
-    const u = s.username;
-    const p = s.password;
-    await adminlog(u, 'Log in attempt', 'Function: CHECK_PASS');
-    const data = await checkAuthentication(u, p);
-    res.json(data);
+    const user = await authenticateUser(s.username, s.password);
+    res.json(user ? '1' : '0');
   }
   else if (s.title == 'usertype') {
     const u = s.username;
@@ -1134,33 +1132,6 @@ async function checkUniqueUsername(username1) {
   return result;
 }
 
-async function checkAuthentication(username1, password1) {
-  let connection;
-  let result;
-  try {
-    connection = await getConnection();
-    const sqlQuery = 'SELECT CHECK_PASS(:username, :password) FROM DUAL';
-    const binds = {
-      username: username1,
-      password: password1
-    }
-    result = await connection.execute(sqlQuery, binds);
-    result = result.rows[0][0];
-  } catch (err) {
-    console.error('Error: ', err);
-  } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Error closing connection: ', err);
-      }
-    }
-  }
-  return result;
-}
-
-
 async function getUserType(username1) {
   let connection;
   let result;
@@ -1192,12 +1163,13 @@ async function insertUsers(username, password, name, mobileno, email, type, x, y
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO USERS VALUES(USER_ID_SEQ.NEXTVAL, :username , :name , ORA_HASH(:password), :email, :type, :mobileno ,:x, :y, SYSDATE, 'A', '/src/public/images/profilephoto' || USER_ID_SEQ.NEXTVAL || :profile,'/src/public/images/coverphoto' || USER_ID_SEQ.NEXTVAL ||  :cover)`;
+    const passwordHash = await hashPassword(password);
+    const sqlQuery = `INSERT INTO USERS VALUES(USER_ID_SEQ.NEXTVAL, :username , :name , :password, :email, :type, :mobileno ,:x, :y, SYSDATE, 'A', '/src/public/images/profilephoto' || USER_ID_SEQ.NEXTVAL || :profile,'/src/public/images/coverphoto' || USER_ID_SEQ.NEXTVAL ||  :cover)`;
 
     const binds = {
       username: username,
       name: name,
-      password: password,
+      password: passwordHash,
       email: email,
       type: type,
       mobileno: mobileno,
@@ -4057,17 +4029,17 @@ async function updatepassword(userid, password, currentPassword) {
   try {
     connection = await getConnection();
     const found = await connection.execute(
-      `SELECT USER_NAME FROM USERS WHERE USER_ID = :userid AND ACTIVE_STATUS = 'A'`,
+      `SELECT PASSWORD FROM USERS WHERE USER_ID = :userid AND ACTIVE_STATUS = 'A'`,
       { userid }
     );
-    const username = found.rows && found.rows[0] && found.rows[0][0];
-    if (!username) return false;
-    const passed = await checkAuthentication(username, currentPassword);
-    if (String(passed) !== '1') return false;
-    const sqlQuery = `UPDATE USERS SET  LAST_UPDATE = SYSDATE , PASSWORD = ORA_HASH(:password) WHERE USER_ID = :userid`;
+    const currentHash = found.rows && found.rows[0] && found.rows[0][0];
+    if (!currentHash) return false;
+    const passed = await verifyPassword(currentPassword, currentHash);
+    if (!passed) return false;
+    const sqlQuery = `UPDATE USERS SET LAST_UPDATE = SYSDATE, PASSWORD = :password WHERE USER_ID = :userid`;
     const binds = {
       userid: userid,
-      password: password
+      password: await hashPassword(password)
     }
     const options = {
       autoCommit: true

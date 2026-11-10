@@ -8,4 +8,6 @@
 | 2026-11-10 | ENG-002 | DONE | httpOnly session, `/api/login`, `/api/logout`, `/api/me`, Vite proxy, relative API URLs. 10 unit tests passed. Oracle round-trip was not run. |
 | 2026-11-10 | ENG-003 | DONE | Ownership checks, admin role via `/api/me`, account disable, password column omitted from the user list and profile query. |
 
-Current ticket: ENG-004. Next: ENG-004.
+| 2026-11-10 | ENG-004 | DONE | bcryptjs cost 12. `CHECK_PASS` and `ORA_HASH` are off the server. Password column widen script is in `database/rebuild/password_column.sql`. |
+
+Current ticket: ENG-005. Next: ENG-005.
