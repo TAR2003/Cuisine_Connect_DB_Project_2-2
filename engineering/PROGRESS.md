@@ -10,4 +10,6 @@
 
 | 2026-11-10 | ENG-004 | DONE | bcryptjs cost 12. `CHECK_PASS` and `ORA_HASH` are off the server. Password column widen script is in `database/rebuild/password_column.sql`. |
 
-Current ticket: ENG-005. Next: ENG-005.
+| 2026-11-10 | ENG-005 | DONE | Ordered rebuild scripts are in `database/rebuild/`. Static test passed. Oracle was not configured in this environment, so the schema was not applied and the seed printed "Seed not applied". |
+
+Current ticket: ENG-006. Next: ENG-006.

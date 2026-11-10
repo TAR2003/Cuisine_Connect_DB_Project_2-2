@@ -2081,7 +2081,7 @@ async function insertmessage(userid1, userid2, caption) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO MESSAGES VALUES(:userid1,:userid2,:caption ,NULL, SYSDATE)`;
+    const sqlQuery = `INSERT INTO MESSAGES (MESSAGE_ID, USER1_ID, USER2_ID, CAPTION, CONTENT, TIME) VALUES (MESSAGE_ID_SEQ.NEXTVAL, :userid1, :userid2, :caption, NULL, SYSDATE)`;
     const binds = {
       userid1: userid1,
       userid2: userid2,
@@ -3327,7 +3327,7 @@ async function insertreservation(userid1, userid2, time) {
   try {
     connection = await getConnection();
     const sqlQuery = `        
-      INSERT INTO RESERVATIONS VALUES ((SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1),(SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2), 1, TO_DATE(:time, 'YYYY-MM-DD'))`;
+      INSERT INTO RESERVATIONS (RESERVATION_ID, CUSTOMER_ID, RESTAURANT_ID, NUMBER_OF_RESERVATIONS, TIME) VALUES (RESERVE_ID_SEQ.NEXTVAL, (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid1),(SELECT RESTAURANT_ID FROM RESTAURANT WHERE USER_ID = :userid2), 1, TO_DATE(:time, 'YYYY-MM-DD'))`;
     const binds = {
       userid1: userid1,
       userid2: userid2,

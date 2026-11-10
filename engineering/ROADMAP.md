@@ -8,8 +8,8 @@ Approved target: privately deployable Cuisine Connect. One Node API, the current
 | ENG-002 | httpOnly session and same-origin API | ENG-001 | DONE |
 | ENG-003 | Authorization and account disable | ENG-002 | DONE |
 | ENG-004 | bcrypt password storage | ENG-003 | DONE |
-| ENG-005 | Ordered schema rebuild | ENG-004 | READY |
-| ENG-006 | Transactional writes and returned ids | ENG-005 | BACKLOG |
+| ENG-005 | Ordered schema rebuild | ENG-004 | DONE |
+| ENG-006 | Transactional writes and returned ids | ENG-005 | READY |
 | ENG-007 | API shape, uploads, modules, README | ENG-006 | BACKLOG |
 | ENG-008 | CI for unit tests and svelte-check | ENG-007 | BACKLOG |
 
