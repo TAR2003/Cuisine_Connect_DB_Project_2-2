@@ -9,8 +9,8 @@ Approved target: privately deployable Cuisine Connect. One Node API, the current
 | ENG-003 | Authorization and account disable | ENG-002 | DONE |
 | ENG-004 | bcrypt password storage | ENG-003 | DONE |
 | ENG-005 | Ordered schema rebuild | ENG-004 | DONE |
-| ENG-006 | Transactional writes and returned ids | ENG-005 | READY |
-| ENG-007 | API shape, uploads, modules, README | ENG-006 | BACKLOG |
+| ENG-006 | Transactional writes and returned ids | ENG-005 | DONE |
+| ENG-007 | API shape, uploads, modules, README | ENG-006 | READY |
 | ENG-008 | CI for unit tests and svelte-check | ENG-007 | BACKLOG |
 
 A ticket moves to READY only when its dependency is DONE. Work is one ticket at a time.

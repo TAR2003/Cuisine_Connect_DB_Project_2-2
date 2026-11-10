@@ -24,10 +24,36 @@ async function getConnection() {
   return pool.getConnection();
 }
 
+function createTransaction(connect) {
+  return async function withTransaction(work) {
+    const connection = await connect();
+    try {
+      const value = await work(connection);
+      await connection.commit();
+      return value;
+    } catch (error) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error('rollback failed:', rollbackError.message);
+      }
+      throw error;
+    } finally {
+      try {
+        await connection.close();
+      } catch (closeError) {
+        console.error('Error closing connection:', closeError.message);
+      }
+    }
+  };
+}
+
+const withTransaction = createTransaction(getConnection);
+
 async function closePool() {
   if (!pool) return;
   await pool.close(0);
   pool = null;
 }
 
-module.exports = { initPool, getConnection, closePool };
+module.exports = { initPool, getConnection, closePool, withTransaction, createTransaction };

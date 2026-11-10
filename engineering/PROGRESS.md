@@ -12,4 +12,6 @@
 
 | 2026-11-10 | ENG-005 | DONE | Ordered rebuild scripts are in `database/rebuild/`. Static test passed. Oracle was not configured in this environment, so the schema was not applied and the seed printed "Seed not applied". |
 
-Current ticket: ENG-006. Next: ENG-006.
+| 2026-11-10 | ENG-006 | DONE | Registration, friend accept, share, and comment deletion commit once. Post ids come back with RETURNING. Both timeline friend branches require STATUS = 'A'. `MAX(POST_ID)` is gone. |
+
+Current ticket: ENG-007. Next: ENG-007.

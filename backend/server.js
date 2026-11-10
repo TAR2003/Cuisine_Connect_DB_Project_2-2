@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const oracledb = require('oracledb');
 const { loadEnvFile, loadConfig } = require('./src/config');
-const { initPool, getConnection } = require('./src/db');
+const { initPool, getConnection, withTransaction } = require('./src/db');
 const sessionHttp = require('./src/session');
 const { decide, canActAs, canParticipate } = require('./src/authz');
 const { hashPassword, verifyPassword } = require('./src/passwords');
@@ -174,10 +174,21 @@ app.post('/save-data', upload.fields([{ name: 'profilePicture' }, { name: 'cover
   const profileextension = path.extname(profilePicture.originalname);
   const coverextension = path.extname(coverPhoto.originalname);
   console.log(obj);
-  let id = await insertUsers(obj.username, obj.password, obj.name, obj.mobileno, obj.email, obj.type, obj.x, obj.y, profileextension, coverextension);
-  if (obj.type == 'C') await insertCustomer(id, obj.date);
-  else if (obj.type == 'R') await insertRestaurant(id, obj.date);
-  else await insertPage(id, obj.date);
+  let id;
+  try {
+    id = await withTransaction(async (connection) => {
+      const userId = await insertUsers(obj.username, obj.password, obj.name, obj.mobileno, obj.email, obj.type, obj.x, obj.y, profileextension, coverextension, connection);
+      if (!userId) throw new Error('user row was not created');
+      if (obj.type == 'C') await insertCustomer(userId, obj.date, connection);
+      else if (obj.type == 'R') await insertRestaurant(userId, obj.date, connection);
+      else await insertPage(userId, obj.date, connection);
+      return userId;
+    });
+  } catch (error) {
+    console.error('registration failed:', error.message);
+    res.status(500).send('Could not create the account');
+    return;
+  }
   // Define paths for saving images
   const profilePicturePath = path.join('../frontend/src/public/images/' + 'profilephoto' + id + profileextension);
   const coverPhotoPath = path.join('../frontend/src/public/images/' + 'coverphoto' + id + coverextension);
@@ -1157,12 +1168,12 @@ async function getUserType(username1) {
   return result;
 }
 
-async function insertUsers(username, password, name, mobileno, email, type, x, y, profile, cover) {
+async function insertUsers(username, password, name, mobileno, email, type, x, y, profile, cover, externalConnection) {
 
-  let connection;
+  let connection = externalConnection;
   let result;
   try {
-    connection = await getConnection();
+    if (!connection) connection = await getConnection();
     const passwordHash = await hashPassword(password);
     const sqlQuery = `INSERT INTO USERS VALUES(USER_ID_SEQ.NEXTVAL, :username , :name , :password, :email, :type, :mobileno ,:x, :y, SYSDATE, 'A', '/src/public/images/profilephoto' || USER_ID_SEQ.NEXTVAL || :profile,'/src/public/images/coverphoto' || USER_ID_SEQ.NEXTVAL ||  :cover)`;
 
@@ -1179,7 +1190,7 @@ async function insertUsers(username, password, name, mobileno, email, type, x, y
       cover: cover
     }
     const options = {
-      autoCommit: true
+      autoCommit: !externalConnection
     }
     result = await connection.execute(sqlQuery, binds, options);
     let newq = 'SELECT USER_ID FROM USERS WHERE USER_NAME = :username';
@@ -1190,8 +1201,9 @@ async function insertUsers(username, password, name, mobileno, email, type, x, y
     result = result.rows[0][0];
   } catch (err) {
     console.error('Error: ', err);
+    if (externalConnection) throw err;
   } finally {
-    if (connection) {
+    if (!externalConnection && connection) {
       try {
         await connection.close();
       } catch (err) {
@@ -1203,24 +1215,15 @@ async function insertUsers(username, password, name, mobileno, email, type, x, y
 }
 
 
-async function insertCustomer(id1, date1) {
-  let connection;
-  let result;
+async function runRoleInsert(externalConnection, sqlQuery, binds) {
+  const connection = externalConnection || await getConnection();
   try {
-    connection = await getConnection();
-    const sqlQuery = `INSERT INTO CUSTOMER VALUES(CUSTOMER_ID_SEQ.NEXTVAL , :id1, TO_DATE( :date1, 'YYYY-MM-DD'), 0)`;
-    const binds = {
-      id1: id1,
-      date1: date1
-    }
-    const options = {
-      autoCommit: true
-    }
-    result = await connection.execute(sqlQuery, binds, options);
+    await connection.execute(sqlQuery, binds, { autoCommit: !externalConnection });
   } catch (err) {
     console.error('Error: ', err);
+    if (externalConnection) throw err;
   } finally {
-    if (connection) {
+    if (!externalConnection && connection) {
       try {
         await connection.close();
       } catch (err) {
@@ -1230,62 +1233,28 @@ async function insertCustomer(id1, date1) {
   }
 }
 
-async function insertRestaurant(id1, date1) {
-  let connection;
-  let result;
-  try {
-    console.log(date1);
-    connection = await getConnection();
-    const sqlQuery = `INSERT INTO Restaurant VALUES(RESTAURANT_ID_SEQ.NEXTVAL , :id1, TO_DATE( :date1, 'YYYY-MM-DD'), 0)`;
-    const binds = {
-      id1: id1,
-      date1: date1
-    }
-    const options = {
-      autoCommit: true
-    }
-    result = await connection.execute(sqlQuery, binds, options);
-    console.log('here');
-  } catch (err) {
-    console.error('Error: ', err);
-  } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Error closing connection: ', err);
-      }
-    }
-  }
+async function insertCustomer(id1, date1, externalConnection) {
+  await runRoleInsert(
+    externalConnection,
+    `INSERT INTO CUSTOMER VALUES(CUSTOMER_ID_SEQ.NEXTVAL , :id1, TO_DATE( :date1, 'YYYY-MM-DD'), 0)`,
+    { id1, date1 }
+  );
 }
 
-async function insertPage(id1, date1) {
-  let connection;
-  let result;
-  try {
-    console.log(date1);
-    connection = await getConnection();
-    const sqlQuery = `INSERT INTO FOODIE_PAGE VALUES( :id1, PAGE_ID_SEQ.NEXTVAL , TO_DATE( :date1, 'YYYY-MM-DD'))`;
-    const binds = {
-      id1: id1,
-      date1: date1
-    }
-    const options = {
-      autoCommit: true
-    }
-    result = await connection.execute(sqlQuery, binds, options);
-    console.log('here');
-  } catch (err) {
-    console.error('Error: ', err);
-  } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Error closing connection: ', err);
-      }
-    }
-  }
+async function insertRestaurant(id1, date1, externalConnection) {
+  await runRoleInsert(
+    externalConnection,
+    `INSERT INTO Restaurant VALUES(RESTAURANT_ID_SEQ.NEXTVAL , :id1, TO_DATE( :date1, 'YYYY-MM-DD'), 0)`,
+    { id1, date1 }
+  );
+}
+
+async function insertPage(id1, date1, externalConnection) {
+  await runRoleInsert(
+    externalConnection,
+    `INSERT INTO FOODIE_PAGE VALUES( :id1, PAGE_ID_SEQ.NEXTVAL , TO_DATE( :date1, 'YYYY-MM-DD'))`,
+    { id1, date1 }
+  );
 }
 
 async function getID(username1) {
@@ -1477,19 +1446,18 @@ async function addnewpost(userid, photo, caption) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'N')`;
+    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'N') RETURNING POST_ID INTO :id`;
     const binds = {
       userid: userid,
       photo: photo,
-      caption: caption
+      caption: caption,
+      id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     }
     let options = {
       autoCommit: true
     }
     result = await connection.execute(sqlQuery, binds, options);
-    const sql = `SELECT MAX(POST_ID) FROM POSTS`;
-    result = await connection.execute(sql);
-    result = result.rows[0][0];
+    result = result.outBinds.id[0];
   } catch (err) {
     console.error('Error: ', err);
   } finally {
@@ -1645,22 +1613,21 @@ async function addshare(postid, userid) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO POSTS VALUES (POST_ID_SEQ.NEXTVAL , :userid, 0,0,0,NULL, NULL, SYSDATE, 'S')`;
+    const sqlQuery = `INSERT INTO POSTS VALUES (POST_ID_SEQ.NEXTVAL , :userid, 0,0,0,NULL, NULL, SYSDATE, 'S') RETURNING POST_ID INTO :id`;
     const binds = {
-      userid: userid
+      userid: userid,
+      id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     }
     const options = {
-      autoCommit: true
+      autoCommit: false
     }
-    await connection.execute(sqlQuery, binds, options);
+    const inserted = await connection.execute(sqlQuery, binds, options);
     const sql = `UPDATE POSTS SET SHARES_COUNT = SHARES_COUNT + 1 WHERE POST_ID = :postid`;
     const bind2 = {
       postid: postid
     }
     await connection.execute(sql, bind2, options);
-    const q2 = `SELECT MAX(POST_ID) FROM POSTS`;
-    let id1 = await connection.execute(q2);
-    const sid1 = id1.rows[0][0];
+    const sid1 = inserted.outBinds.id[0];
     const sql3 = `INSERT INTO SHARE_POST VALUES (:postid, :sid1)`;
     const bind3 = {
       sid1: sid1,
@@ -1668,8 +1635,10 @@ async function addshare(postid, userid) {
 
     }
     await connection.execute(sql3, bind3, options);
+    await connection.commit();
 
   } catch (err) {
+    try { await connection.rollback(); } catch (rollbackError) { console.error('rollback failed:', rollbackError.message); }
     console.error('Error: ', err);
   } finally {
     if (connection) {
@@ -1688,19 +1657,16 @@ async function addshare1(postid, userid) {
     connection = await getConnection();
 
     // Insert a new post into POSTS
-    const sqlQuery = `INSERT INTO POSTS VALUES (POST_ID_SEQ.NEXTVAL, :userid, 0, 0, 0, NULL, NULL, SYSDATE, 'S')`;
+    const sqlQuery = `INSERT INTO POSTS VALUES (POST_ID_SEQ.NEXTVAL, :userid, 0, 0, 0, NULL, NULL, SYSDATE, 'S') RETURNING POST_ID INTO :id`;
     const binds = {
-      userid: userid
+      userid: userid,
+      id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     }
     const options = {
       autoCommit: true
     }
-    await connection.execute(sqlQuery, binds, options);
-
-    // Get the newly inserted post's ID
-    const q2 = `SELECT MAX(POST_ID) FROM POSTS`;
-    let id1 = await connection.execute(q2);
-    const newPostId = id1.rows[0][0];
+    const inserted = await connection.execute(sqlQuery, binds, options);
+    const newPostId = inserted.outBinds.id[0];
 
     // Update the SHARES_COUNT in POSTS table
     const sql = `UPDATE POSTS SET SHARES_COUNT = SHARES_COUNT + 1 WHERE POST_ID = :newPostId`;
@@ -1859,7 +1825,7 @@ async function acceptRequest(userid1, userid2) {
       userid2: userid2
     }
     const options = {
-      autoCommit: true
+      autoCommit: false
     }
     result = await connection.execute(sqlQuery, binds, options);
     const sql = `UPDATE CUSTOMER SET FRIENDS = FRIENDS + 1 WHERE USER_ID = :userid1`
@@ -1872,7 +1838,9 @@ async function acceptRequest(userid1, userid2) {
     }
     await connection.execute(sql, b1, options);
     await connection.execute(sql2, b2, options);
+    await connection.commit();
   } catch (err) {
+    try { await connection.rollback(); } catch (rollbackError) { console.error('rollback failed:', rollbackError.message); }
     console.error('Error: ', err);
   } finally {
     if (connection) {
@@ -2430,20 +2398,18 @@ async function addnewreviewpost(userid, photo, caption, menuid, rating) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'R')`;
+    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0,'/src/public/images/postphoto' || POST_ID_SEQ.NEXTVAL || :photo , :caption, SYSDATE, 'R') RETURNING POST_ID INTO :id`;
     const binds = {
       userid: userid,
       photo: photo,
-      caption: caption
+      caption: caption,
+      id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     }
     let options = {
       autoCommit: true
     }
     result = await connection.execute(sqlQuery, binds, options);
-
-    const sql = `SELECT MAX(POST_ID) FROM POSTS`;
-    result = await connection.execute(sql);
-    let a = result.rows[0][0];
+    let a = result.outBinds.id[0];
     const s2 = `insert INTO REVIEW_POST VALUES(:menuid, :a, (SELECT RESTAURANT_ID FROM MENU WHERE MENU_ID = :menuid), :rating)`;
     const b2 = {
       menuid: menuid,
@@ -2451,7 +2417,7 @@ async function addnewreviewpost(userid, photo, caption, menuid, rating) {
       rating: rating
     }
     await connection.execute(s2, b2, options);
-    result = result.rows[0][0];
+    result = a;
   } catch (err) {
     console.error('Error: ', err);
   } finally {
@@ -2472,18 +2438,20 @@ async function addnewreviewpostwithoutpicture(userid, caption, rating, menuid) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0, NULL , :caption, SYSDATE, 'R')`;;
+    const sqlQuery = `INSERT INTO POSTS VALUES(POST_ID_SEQ.NEXTVAL, :userid , 0, 0, 0, NULL , :caption, SYSDATE, 'R') RETURNING POST_ID INTO :id`;
     const binds = {
       userid: userid,
-      caption: caption
+      caption: caption,
+      id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     }
     let options = {
       autoCommit: true
     }
     result = await connection.execute(sqlQuery, binds, options);
-    const s2 = `INSERT INTO REVIEW_POST VALUES(:menuid, (SELECT MAX(POST_ID) FROM POSTS) , (SELECT RESTAURANT_ID FROM MENU WHERE MENU_ID = :menuid), :rating)`
+    const s2 = `INSERT INTO REVIEW_POST VALUES(:menuid, :postId, (SELECT RESTAURANT_ID FROM MENU WHERE MENU_ID = :menuid), :rating)`
     const b2 = {
       menuid: menuid,
+      postId: result.outBinds.id[0],
       rating: rating
     }
     await connection.execute(s2, b2, options)
@@ -2591,13 +2559,15 @@ async function deletecomment(commentid) {
       commentid: commentid
     };
     const options = {
-      autoCommit: true
+      autoCommit: false
     };
     const s2 = `UPDATE POSTS SET COMMENT_COUNT = COMMENT_COUNT - 1 WHERE POST_ID = (SELECT POST_ID FROM COMMENTS WHERE COMMENT_ID = :commentid)`;
     await connection.execute(s2, binds, options);
     await connection.execute(sqlQuery, binds, options);
+    await connection.commit();
 
   } catch (err) {
+    try { await connection.rollback(); } catch (rollbackError) { console.error('rollback failed:', rollbackError.message); }
     console.error('Error: ', err);
   } finally {
     if (connection) {
@@ -4100,7 +4070,7 @@ SELECT	POST_ID, TIME
 UNION 
 SELECT POST_ID , TIME
 FROM POSTS P 
-WHERE USER_ID IN (SELECT (SELECT USER_ID FROM CUSTOMER WHERE CUSTOMER_ID = C2_ID) FROM FRIEND_REQUEST WHERE C1_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid))
+WHERE USER_ID IN (SELECT (SELECT USER_ID FROM CUSTOMER WHERE CUSTOMER_ID = C2_ID) FROM FRIEND_REQUEST WHERE C1_ID = (SELECT CUSTOMER_ID FROM CUSTOMER WHERE USER_ID = :userid) AND STATUS = 'A')
 UNION 
 SELECT POST_ID , TIME 
 FROM POSTS
