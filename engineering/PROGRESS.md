@@ -16,4 +16,6 @@
 
 | 2026-11-10 | ENG-007 | DONE | Uploads stay in backend/uploads with a 5 MB allowlist. Identity routes live in backend/src/routes. The frontend calls one client. Express serves the static build when it exists. npm run check reports 0 errors. Session responses are { ok, data }. Other reads stay positional arrays because their pages still index them that way. Oracle was not started, so login in the browser was not exercised. |
 
-Current ticket: ENG-008. Next: ENG-008.
+| 2026-11-10 | ENG-008 | DONE | GitHub Actions runs backend unit tests and frontend svelte-check. Oracle is not part of the job. npm audit is recorded and does not fail the job. |
+
+Current ticket: none. The schema was not applied. Oracle was not configured in this environment. |

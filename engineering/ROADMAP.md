@@ -11,6 +11,6 @@ Approved target: privately deployable Cuisine Connect. One Node API, the current
 | ENG-005 | Ordered schema rebuild | ENG-004 | DONE |
 | ENG-006 | Transactional writes and returned ids | ENG-005 | DONE |
 | ENG-007 | API shape, uploads, modules, README | ENG-006 | DONE |
-| ENG-008 | CI for unit tests and svelte-check | ENG-007 | READY |
+| ENG-008 | CI for unit tests and svelte-check | ENG-007 | DONE |
 
 A ticket moves to READY only when its dependency is DONE. Work is one ticket at a time.

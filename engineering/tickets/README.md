@@ -9,4 +9,4 @@
 | ENG-005 | Ordered schema rebuild | P0 | ENG-004 | DONE |
 | ENG-006 | Transactional writes and returned ids | P1 | ENG-005 | DONE |
 | ENG-007 | API shape, uploads, modules, README | P1 | ENG-006 | DONE |
-| ENG-008 | CI for unit tests and svelte-check | P1 | ENG-007 | READY |
+| ENG-008 | CI for unit tests and svelte-check | P1 | ENG-007 | DONE |
