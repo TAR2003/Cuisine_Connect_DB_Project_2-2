@@ -18,8 +18,9 @@
 			price: price
 		};
 		try {
-			const response = await fetch('http://localhost:3001/api/addmenu', {
+			const response = await fetch('/api/addmenu', {
 				method: 'POST',
+				credentials: 'include',
 				headers: {
 					'Content-Type': 'application/json'
 				},

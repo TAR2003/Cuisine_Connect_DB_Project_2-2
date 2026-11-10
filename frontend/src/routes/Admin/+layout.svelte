@@ -4,18 +4,23 @@
 	import { onMount } from 'svelte';
 	import { calculatemenuprice, calculatetotaltransaction } from '../../functions';
 
-	let username = jsCookie.get('username');
-
 	let tt = 0;
 	let tmp = 0;
 	onMount(async () => {
-		console.log(username);
-		if (username != 'admin') goto('/');
+		const response = await fetch('/api/me', { credentials: 'include' });
+		const body = response.ok ? await response.json() : null;
+		if (!body || !body.ok || body.data.userType !== 'A') {
+			goto('/');
+			return;
+		}
 		tt = await calculatetotaltransaction();
 		tmp = await calculatemenuprice();
 	});
-	function logout() {
+	async function logout() {
+		await fetch('/api/logout', { method: 'POST', credentials: 'include' });
 		jsCookie.remove('username');
+		jsCookie.remove('userid');
+		jsCookie.remove('usertype');
 		goto('/');
 	}
 	function gotousers() {

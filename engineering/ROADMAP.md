@@ -5,9 +5,9 @@ Approved target: privately deployable Cuisine Connect. One Node API, the current
 | ID | Title | Depends on | Status |
 |---|---|---|---|
 | ENG-001 | Secrets, pool, and a single entry point | — | DONE |
-| ENG-002 | httpOnly session and same-origin API | ENG-001 | READY |
-| ENG-003 | Authorization and account disable | ENG-002 | BACKLOG |
-| ENG-004 | bcrypt password storage | ENG-003 | BACKLOG |
+| ENG-002 | httpOnly session and same-origin API | ENG-001 | DONE |
+| ENG-003 | Authorization and account disable | ENG-002 | DONE |
+| ENG-004 | bcrypt password storage | ENG-003 | READY |
 | ENG-005 | Ordered schema rebuild | ENG-004 | BACKLOG |
 | ENG-006 | Transactional writes and returned ids | ENG-005 | BACKLOG |
 | ENG-007 | API shape, uploads, modules, README | ENG-006 | BACKLOG |

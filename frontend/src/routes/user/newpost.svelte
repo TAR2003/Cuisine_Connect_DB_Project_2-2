@@ -16,8 +16,9 @@
 		formData.append('postphoto', postpicture);
 
 		try {
-			const response = await fetch('http://localhost:3001/addpostwithpicture', {
+			const response = await fetch('/addpostwithpicture', {
 				method: 'POST',
+				credentials: 'include',
 				body: formData
 			});
 
@@ -36,8 +37,9 @@
 			caption: caption
 		};
 		try {
-			const response = await fetch('http://localhost:3001/api/addpostwithoutmedia', {
+			const response = await fetch('/api/addpostwithoutmedia', {
 				method: 'POST',
+				credentials: 'include',
 				headers: {
 					'Content-Type': 'application/json'
 				},

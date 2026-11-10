@@ -6,6 +6,8 @@ const fs = require('fs');
 const oracledb = require('oracledb');
 const { loadEnvFile, loadConfig } = require('./src/config');
 const { initPool, getConnection } = require('./src/db');
+const sessionHttp = require('./src/session');
+const { decide, canActAs, canParticipate } = require('./src/authz');
 
 const app = express();
 
@@ -27,6 +29,140 @@ const port = config.port;
 const uploadDir = path.join(__dirname, 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 const upload = multer({ dest: uploadDir });
+
+app.post('/api/login', async (req, res) => {
+  try {
+    await sessionHttp.handleLogin(req, res, {
+      config,
+      authenticate: authenticateUser,
+      createSession: (userId) => withDb((connection) => sessionHttp.insertSession(connection, userId))
+    });
+  } catch (error) {
+    console.error('login failed:', error.message);
+    res.status(500).json({ ok: false, error: { code: 'SERVER_ERROR', message: 'Sign-in failed' } });
+  }
+});
+
+app.post('/api/logout', async (req, res) => {
+  try {
+    await sessionHttp.handleLogout(req, res, {
+      config,
+      destroySession: (sessionId) => withDb((connection) => sessionHttp.deleteSession(connection, sessionId))
+    });
+  } catch (error) {
+    console.error('logout failed:', error.message);
+    res.status(500).json({ ok: false, error: { code: 'SERVER_ERROR', message: 'Sign-out failed' } });
+  }
+});
+
+app.get('/api/me', async (req, res) => {
+  try {
+    await sessionHttp.handleMe(req, res, {
+      loadActor: (sessionId) => withDb((connection) => sessionHttp.readActor(connection, sessionId))
+    });
+  } catch (error) {
+    console.error('session lookup failed:', error.message);
+    res.status(500).json({ ok: false, error: { code: 'SERVER_ERROR', message: 'Could not read the session' } });
+  }
+});
+
+async function enforceRequest(req, res, next) {
+  try {
+    if (req.path === '/save-data') return next();
+    if (req.path === '/api/username' && req.body && req.body.title === 'checkusername') return next();
+    const sessionId = sessionHttp.readCookie(req.headers.cookie);
+    const actor = sessionId
+      ? await withDb((connection) => sessionHttp.readActor(connection, sessionId))
+      : null;
+    if (!actor) {
+      res.status(401).json({ ok: false, error: { code: 'UNAUTHORIZED', message: 'Sign in required' } });
+      return;
+    }
+    req.actor = actor;
+    const decision = decide(req.path, actor, req.body || {});
+    if (!decision.ok) {
+      res.status(decision.status).json({
+        ok: false,
+        error: { code: decision.code, message: decision.message }
+      });
+      return;
+    }
+    if (decision.resource) {
+      const allowed = await withDb((connection) => resourceAllowed(connection, actor, decision));
+      if (!allowed) {
+        res.status(403).json({ ok: false, error: { code: 'FORBIDDEN', message: 'Not allowed' } });
+        return;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('authorization failed:', error.message);
+    res.status(500).json({ ok: false, error: { code: 'SERVER_ERROR', message: 'Authorization failed' } });
+  }
+}
+
+async function resourceAllowed(connection, actor, decision) {
+  if (decision.resource === 'post') {
+    const result = await connection.execute('SELECT USER_ID FROM POSTS WHERE POST_ID = :id', { id: decision.id });
+    const owner = result.rows && result.rows[0] && result.rows[0][0];
+    if (owner == null) return false;
+    return canActAs(actor, owner) || (decision.allowAdmin && actor.userType === 'A');
+  }
+  if (decision.resource === 'comment') {
+    const result = await connection.execute('SELECT USER_ID FROM COMMENTS WHERE COMMENT_ID = :id', { id: decision.id });
+    const owner = result.rows && result.rows[0] && result.rows[0][0];
+    if (owner == null) return false;
+    return canActAs(actor, owner) || (decision.allowAdmin && actor.userType === 'A');
+  }
+  const result = await connection.execute(
+    `SELECT C.USER_ID, R.USER_ID
+     FROM FOODORDER F
+     JOIN CUSTOMER C ON C.CUSTOMER_ID = F.CUSTOMER_ID
+     JOIN RESTAURANT R ON R.RESTAURANT_ID = F.RESTAURANT_ID
+     WHERE F.ORDER_ID = :id`,
+    { id: decision.id }
+  );
+  const row = result.rows && result.rows[0];
+  if (!row) return false;
+  return canParticipate(actor, { customerUserId: row[0], restaurantUserId: row[1] }, decision.role);
+}
+
+async function withDb(work) {
+  const connection = await getConnection();
+  try {
+    return await work(connection);
+  } finally {
+    try {
+      await connection.close();
+    } catch (error) {
+      console.error('Error closing connection:', error.message);
+    }
+  }
+}
+
+async function authenticateUser(username, password) {
+  const normalized = String(username).startsWith('@') ? String(username) : '@' + username;
+  const passed = await checkAuthentication(normalized, password);
+  if (String(passed) !== '1') return null;
+  return withDb(async (connection) => {
+    const result = await connection.execute(
+      `SELECT USER_ID, USER_NAME, USER_TYPE, ACTIVE_STATUS, NAME
+       FROM USERS WHERE USER_NAME = :username`,
+      { username: normalized }
+    );
+    const row = result.rows && result.rows[0];
+    if (!row) return null;
+    return {
+      userId: row[0],
+      userName: row[1],
+      userType: row[2],
+      activeStatus: row[3],
+      name: row[4]
+    };
+  });
+}
+
+app.use(enforceRequest);
 
 app.post('/save-data', upload.fields([{ name: 'profilePicture' }, { name: 'coverPhoto' }]), async (req, res) => {
   const obj = req.body;
@@ -843,9 +979,15 @@ app.post('/api/getallorders1', async (req, res) => {
 
 app.post('/api/updatepassword', async (req, res) => {
   const s = req.body;
-  const data = '';
-  await updatepassword(s.userid, s.password);
-  res.json(data);
+  const changed = await updatepassword(s.userid, s.password, s.currentPassword);
+  if (!changed) {
+    res.status(403).json({
+      ok: false,
+      error: { code: 'FORBIDDEN', message: 'Current password is wrong' }
+    });
+    return;
+  }
+  res.json('');
 });
 
 app.post('/api/updatepost', async (req, res) => {
@@ -892,11 +1034,8 @@ async function run(a) {
   try {
     console.log('till now');
     connection = await getConnection();
-    const sqlQuery = 'select * FROM USERS where USER_ID = ' + a;
-    result = await connection.execute(sqlQuery);
-    const sql2 = `select CHECK_PASS('CLA1', 'PASSWORD1') AS RES FROM DUAL`;
-    let tyu = await connection.execute(sql2);
-    console.log(tyu.rows[0][0] + " thats awhta we gogt");
+    const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, NULL, EMAIL, USER_TYPE, MOBILE_NO, LOCATION_X, LOCATION_Y, LAST_UPDATE, ACTIVE_STATUS, PROFILE_PICTURE, COVER_PICTURE FROM USERS WHERE USER_ID = :id`;
+    result = await connection.execute(sqlQuery, { id: a });
 
   } catch (err) {
     console.error('Error: ', err);
@@ -1234,7 +1373,7 @@ async function getUserinfo(username1) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = 'SELECT * FROM USERS WHERE USER_NAME = :username1';
+    const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, NULL, EMAIL, USER_TYPE, MOBILE_NO, LOCATION_X, LOCATION_Y, LAST_UPDATE, ACTIVE_STATUS, PROFILE_PICTURE, COVER_PICTURE FROM USERS WHERE USER_NAME = :username1`;
     const binds = {
       username1: username1
     }
@@ -1259,7 +1398,7 @@ async function getUserinfoid(id1) {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = 'SELECT * FROM USERS WHERE USER_ID = :id1';
+    const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, NULL, EMAIL, USER_TYPE, MOBILE_NO, LOCATION_X, LOCATION_Y, LAST_UPDATE, ACTIVE_STATUS, PROFILE_PICTURE, COVER_PICTURE FROM USERS WHERE USER_ID = :id1`;
     const binds = {
       id1: id1
     }
@@ -3326,7 +3465,7 @@ async function deleteaccount(userid) {
   try {
     connection = await getConnection();
     const sqlQuery = `
-      DELETE FROM USERS WHERE USER_ID = :userid`;
+      UPDATE USERS SET ACTIVE_STATUS = 'D', LAST_UPDATE = SYSDATE WHERE USER_ID = :userid`;
     const binds = {
       userid: userid
     }
@@ -3334,6 +3473,11 @@ async function deleteaccount(userid) {
       autoCommit: true
     }
     result = await connection.execute(sqlQuery, binds, options);
+    await connection.execute(
+      'DELETE FROM SESSIONS WHERE USER_ID = :userid',
+      { userid },
+      options
+    );
     result = result.rows;
   } catch (err) {
     console.error('Error: ', err);
@@ -3768,8 +3912,7 @@ async function getallusers() {
   let result;
   try {
     connection = await getConnection();
-    const sqlQuery = `SELECT * FROM USERS ORDER BY USER_ID
-      `;
+    const sqlQuery = `SELECT USER_ID, USER_NAME, NAME, NULL, EMAIL, USER_TYPE, MOBILE_NO, LOCATION_X, LOCATION_Y, LAST_UPDATE, ACTIVE_STATUS, PROFILE_PICTURE, COVER_PICTURE FROM USERS ORDER BY USER_ID`;
     result = await connection.execute(sqlQuery);
     result = result.rows;
   } catch (err) {
@@ -3908,11 +4051,19 @@ async function getallorders1() {
 }
 
 
-async function updatepassword(userid, password) {
+async function updatepassword(userid, password, currentPassword) {
   let connection;
   let result;
   try {
     connection = await getConnection();
+    const found = await connection.execute(
+      `SELECT USER_NAME FROM USERS WHERE USER_ID = :userid AND ACTIVE_STATUS = 'A'`,
+      { userid }
+    );
+    const username = found.rows && found.rows[0] && found.rows[0][0];
+    if (!username) return false;
+    const passed = await checkAuthentication(username, currentPassword);
+    if (String(passed) !== '1') return false;
     const sqlQuery = `UPDATE USERS SET  LAST_UPDATE = SYSDATE , PASSWORD = ORA_HASH(:password) WHERE USER_ID = :userid`;
     const binds = {
       userid: userid,
@@ -3922,8 +4073,10 @@ async function updatepassword(userid, password) {
       autoCommit: true
     }
     result = await connection.execute(sqlQuery, binds, options);
+    return true;
   } catch (err) {
     console.error('Error: ', err);
+    return false;
   } finally {
     if (connection) {
       try {
@@ -4086,6 +4239,7 @@ ORDER BY R.TIME DESC`;
 async function start() {
   try {
     await initPool();
+    await withDb((connection) => connection.execute(sessionHttp.ENSURE_SESSIONS_SQL));
   } catch (error) {
     console.error('Database pool failed:', error.message);
     process.exit(1);

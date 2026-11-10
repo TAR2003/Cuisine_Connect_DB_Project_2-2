@@ -1,14 +1,13 @@
 <!-- src/ConfirmationModal.svelte -->
 <script>
 	import jsCookie from 'js-cookie';
-	import { getAuthentication, updatepassword } from '../../../functions';
+	import { updatepassword } from '../../../functions';
 	import { onMount } from 'svelte';
 
 	export let visible;
 	export let onConfirm;
 	export let onCancel;
 	let userid = jsCookie.get('userid');
-	let username = jsCookie.get('username');
 	let curpass = '';
 	let newpass = '';
 	let newpass2 = '';
@@ -16,11 +15,12 @@
 	onMount(() => {});
 
 	async function confirm() {
-		let authentication = await getAuthentication(username.slice(1), curpass);
-
-		console.log('the ans ' + authentication);
-		if (newpass == newpass2 && authentication == 1) {
-			await updatepassword(userid, newpass);
+		if (newpass == newpass2) {
+			const updated = await updatepassword(userid, newpass, curpass);
+			if (updated === undefined) {
+				alerting = true;
+				return;
+			}
 			newpass = '';
 			newpass2 = '';
 			curpass = '';

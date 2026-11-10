@@ -1,7 +1,7 @@
 <script>
 	import Cookies from 'js-cookie';
 	import { goto } from '$app/navigation';
-	import { findUserType, getAuthentication, getID } from '../../functions';
+	import { loginRequest } from '../../functions';
 	import { onDestroy } from 'svelte';
 
 	let savedUsername = '';
@@ -12,24 +12,18 @@
 	onDestroy(() => {});
 
 	async function onButtonclick() {
-		if (username == 'admin' && password == 'admin') {
-			Cookies.set('username', 'admin');
-			goto('/Admin');
+		const result = await loginRequest(username, password);
+		if (!result || !result.ok) {
+			showredborder = true;
+			return;
 		}
-		let v = await getAuthentication(username, password);
-		console.log('authentication status ' + v);
-		if (v == null) showredborder = true;
-		else if (v == 0) showredborder = true;
-		else {
-			showredborder = false;
-			Cookies.set('username', '@' + username);
-			let usertype = await findUserType(username);
-			Cookies.set('usertype', usertype);
-			let id1 = await getID('@' + username);
-			Cookies.set('userid', id1);
-			goto('/user');
-		}
-		console.log(v);
+		showredborder = false;
+		const me = result.data;
+		Cookies.set('username', me.userName);
+		Cookies.set('usertype', me.userType);
+		Cookies.set('userid', String(me.userId));
+		if (me.userType === 'A') goto('/Admin');
+		else goto('/user');
 	}
 </script>
 

@@ -47,6 +47,27 @@ function toRadians(degrees) {
 
 
 
+export async function loginRequest(username, password) {
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: '@' + username,
+                password: password
+            })
+        });
+        const data = await response.json().catch(() => null);
+        return response.ok ? data : null;
+    } catch (error) {
+        console.error('Error :', error);
+        return null;
+    }
+}
+
 export async function getAuthentication(username, password) {
     let s = {
         title: 'getauthentication',
@@ -54,8 +75,9 @@ export async function getAuthentication(username, password) {
         password: password
     };
     try {
-        const response = await fetch('http://localhost:3001/api/username', {
+        const response = await fetch('/api/username', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -76,8 +98,9 @@ export async function findUserType(username) {
         username: '@' + username
     };
     try {
-        const response = await fetch('http://localhost:3001/api/username', {
+        const response = await fetch('/api/username', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -98,8 +121,9 @@ export async function getID(u) {
         username: u
     };
     try {
-        const response = await fetch('http://localhost:3001/api/username', {
+        const response = await fetch('/api/username', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -120,8 +144,9 @@ export async function getallposts() {
         title: 'getallposts'
     };
     try {
-        const response = await fetch('http://localhost:3001/api/getallposts', {
+        const response = await fetch('/api/getallposts', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -143,8 +168,9 @@ export async function getprofilepicture(userid) {
         userid: userid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/profilephoto', {
+        const response = await fetch('/api/profilephoto', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -166,8 +192,9 @@ export async function getuserinfoid(u) {
         userid: u
     };
     try {
-        const response = await fetch('http://localhost:3001/api/username', {
+        const response = await fetch('/api/username', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -190,8 +217,9 @@ export async function addcomment(userid, postid, caption) {
         caption: caption
     };
     try {
-        const response = await fetch('http://localhost:3001/api/addcomment', {
+        const response = await fetch('/api/addcomment', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -212,8 +240,9 @@ export async function getcomments(postid) {
         postid: postid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/getcomment', {
+        const response = await fetch('/api/getcomment', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -235,8 +264,9 @@ export async function getpostinfo(postid) {
         postid: postid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/postinfo', {
+        const response = await fetch('/api/postinfo', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -260,8 +290,9 @@ export async function addshare(userid, postid) {
         postid: postid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/addshare', {
+        const response = await fetch('/api/addshare', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -281,8 +312,9 @@ export async function getshare(postid) {
         postid: postid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/getshare', {
+        const response = await fetch('/api/getshare', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -304,8 +336,9 @@ export async function addreact(userid, postid) {
         userid: userid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/addreact', {
+        const response = await fetch('/api/addreact', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -327,8 +360,9 @@ export async function removereact(userid, postid) {
         userid: userid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/removereact', {
+        const response = await fetch('/api/removereact', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -350,8 +384,9 @@ export async function reactsituation(userid, postid) {
         userid: userid
     };
     try {
-        const response = await fetch('http://localhost:3001/api/reactsituation', {
+        const response = await fetch('/api/reactsituation', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -372,8 +407,9 @@ export async function getallprofileposts(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallprofileposts', {
+        const response = await fetch('/api/getallprofileposts', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -398,8 +434,9 @@ export async function getfriendshipstatus(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/friend', {
+        const response = await fetch('/api/friend', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -423,8 +460,9 @@ export async function giverequest(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/friend', {
+        const response = await fetch('/api/friend', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -448,8 +486,9 @@ export async function deleterequest(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/friend', {
+        const response = await fetch('/api/friend', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -472,8 +511,9 @@ export async function acceptrequest(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/friend', {
+        const response = await fetch('/api/friend', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -495,8 +535,9 @@ export async function unfriend(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/friend', {
+        const response = await fetch('/api/friend', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -517,8 +558,9 @@ export async function getallfriendrequests(userid1) {
         userid1: userid1
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallfriendrequests', {
+        const response = await fetch('/api/getallfriendrequests', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -539,8 +581,9 @@ export async function getallfriends(userid1) {
         userid1: userid1
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallfriends', {
+        const response = await fetch('/api/getallfriends', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -561,8 +604,9 @@ export async function getinbox(userid1) {
         userid1: userid1
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getinbox', {
+        const response = await fetch('/api/getinbox', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -584,8 +628,9 @@ export async function getmessages(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getmessages', {
+        const response = await fetch('/api/getmessages', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -608,8 +653,9 @@ export async function insertmessage(userid1, userid2, caption) {
         caption: caption
     }
     try {
-        const response = await fetch('http://localhost:3001/api/insertmessage', {
+        const response = await fetch('/api/insertmessage', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -630,8 +676,9 @@ export async function getreviewpost(postid) {
         postid: postid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getreviewpost', {
+        const response = await fetch('/api/getreviewpost', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -652,8 +699,9 @@ export async function getmenublockinfo(menuid) {
         menuid: menuid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getmenublockinfo', {
+        const response = await fetch('/api/getmenublockinfo', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -675,8 +723,9 @@ export async function getmenureviewposts(menuid) {
         menuid: menuid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getmenureviewposts', {
+        const response = await fetch('/api/getmenureviewposts', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -698,8 +747,9 @@ export async function getrestaurantreviewposts(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getrestaurantreviewposts', {
+        const response = await fetch('/api/getrestaurantreviewposts', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -719,8 +769,9 @@ export async function getmenu(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getmenu', {
+        const response = await fetch('/api/getmenu', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -742,8 +793,9 @@ export async function getfollowstatus(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getfollowstatus', {
+        const response = await fetch('/api/getfollowstatus', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -765,8 +817,9 @@ export async function setfollow(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/setfollow', {
+        const response = await fetch('/api/setfollow', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -788,8 +841,9 @@ export async function unfollow(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/unfollow', {
+        const response = await fetch('/api/unfollow', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -810,8 +864,9 @@ export async function getrestaurantrating(userid1) {
         userid1: userid1
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getrestaurantrating', {
+        const response = await fetch('/api/getrestaurantrating', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -832,8 +887,9 @@ export async function getfollowlist(userid1) {
         userid1: userid1
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getfollowlist', {
+        const response = await fetch('/api/getfollowlist', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -854,8 +910,9 @@ export async function findusername(u) {
         u: u
     }
     try {
-        const response = await fetch('http://localhost:3001/api/findusername', {
+        const response = await fetch('/api/findusername', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -875,8 +932,9 @@ export async function findname(u) {
         u: u
     }
     try {
-        const response = await fetch('http://localhost:3001/api/findname', {
+        const response = await fetch('/api/findname', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -897,8 +955,9 @@ export async function deletepost(postid) {
         postid: postid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/deletepost', {
+        const response = await fetch('/api/deletepost', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -919,8 +978,9 @@ export async function deletecomment(commentid) {
         commentid: commentid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/deletecomment', {
+        const response = await fetch('/api/deletecomment', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -941,8 +1001,9 @@ export async function getnearbyrestaurants(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getnearbyrestaurants', {
+        const response = await fetch('/api/getnearbyrestaurants', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -962,8 +1023,9 @@ export async function getfollowedrestaurants(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getfollowedrestaurants', {
+        const response = await fetch('/api/getfollowedrestaurants', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -985,8 +1047,9 @@ export async function connectionstatus(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/connectionstatus', {
+        const response = await fetch('/api/connectionstatus', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1008,8 +1071,9 @@ export async function addconnection(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/addconnection', {
+        const response = await fetch('/api/addconnection', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1030,8 +1094,9 @@ export async function removeconnection(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/removeconnection', {
+        const response = await fetch('/api/removeconnection', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1052,8 +1117,9 @@ export async function getconnectedpage(userid1) {
         userid1: userid1
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getconnectedpage', {
+        const response = await fetch('/api/getconnectedpage', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1074,8 +1140,9 @@ export async function getallorders(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallorders', {
+        const response = await fetch('/api/getallorders', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1096,8 +1163,9 @@ export async function getcurrentorders(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getcurrentorders', {
+        const response = await fetch('/api/getcurrentorders', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1118,8 +1186,9 @@ export async function getcart(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getcart', {
+        const response = await fetch('/api/getcart', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1140,8 +1209,9 @@ export async function clearcart(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/clearcart', {
+        const response = await fetch('/api/clearcart', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1162,8 +1232,9 @@ export async function finalizecart(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/finalizecart', {
+        const response = await fetch('/api/finalizecart', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1184,8 +1255,9 @@ export async function delivered(orderid) {
         orderid: orderid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/delivered', {
+        const response = await fetch('/api/delivered', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1206,8 +1278,9 @@ export async function ontheway(orderid) {
         orderid: orderid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/ontheway', {
+        const response = await fetch('/api/ontheway', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1229,8 +1302,9 @@ export async function preparing(orderid) {
         orderid: orderid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/preparing', {
+        const response = await fetch('/api/preparing', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1251,8 +1325,9 @@ export async function removefromcart(orderid) {
         orderid: orderid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/removefromcart', {
+        const response = await fetch('/api/removefromcart', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1273,8 +1348,9 @@ export async function increaseamount(orderid) {
         orderid: orderid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/increaseamount', {
+        const response = await fetch('/api/increaseamount', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1296,8 +1372,9 @@ export async function decreaseamount(orderid) {
         orderid: orderid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/decreaseamount', {
+        const response = await fetch('/api/decreaseamount', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1318,8 +1395,9 @@ export async function getorderinfo(orderid) {
         orderid: orderid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getorderinfo', {
+        const response = await fetch('/api/getorderinfo', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1342,8 +1420,9 @@ export async function insertorder(userid1, menuid, userid2) {
         menuid: menuid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/insertorder', {
+        const response = await fetch('/api/insertorder', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1367,8 +1446,9 @@ export async function pendingorders(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/pendingorders', {
+        const response = await fetch('/api/pendingorders', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1392,8 +1472,9 @@ export async function allrestaurantorders(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/allrestaurantorders', {
+        const response = await fetch('/api/allrestaurantorders', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1416,8 +1497,9 @@ export async function reservationstatus(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/reservationstatus', {
+        const response = await fetch('/api/reservationstatus', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1439,8 +1521,9 @@ export async function removereservation(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/removereservation', {
+        const response = await fetch('/api/removereservation', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1463,8 +1546,9 @@ export async function insertreservation(userid1, userid2, time) {
         time: time
     }
     try {
-        const response = await fetch('http://localhost:3001/api/insertreservation', {
+        const response = await fetch('/api/insertreservation', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1486,8 +1570,9 @@ export async function alluserreservations(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/alluserreservations', {
+        const response = await fetch('/api/alluserreservations', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1508,8 +1593,9 @@ export async function allrestaurantreservations(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/allrestaurantreservations', {
+        const response = await fetch('/api/allrestaurantreservations', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1530,8 +1616,9 @@ export async function deleteaccount(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/deleteaccount', {
+        const response = await fetch('/api/deleteaccount', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1552,8 +1639,9 @@ export async function rinfo(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/rinfo', {
+        const response = await fetch('/api/rinfo', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1574,8 +1662,9 @@ export async function cinfo(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/cinfo', {
+        const response = await fetch('/api/cinfo', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1596,8 +1685,9 @@ export async function pinfo(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/pinfo', {
+        const response = await fetch('/api/pinfo', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1618,8 +1708,9 @@ export async function seen(nid) {
         nid: nid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/seen', {
+        const response = await fetch('/api/seen', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1641,8 +1732,9 @@ export async function getpostnotification(nid) {
         nid: nid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getpostnotification', {
+        const response = await fetch('/api/getpostnotification', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1663,8 +1755,9 @@ export async function getordernotification(nid) {
         nid: nid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getordernotification', {
+        const response = await fetch('/api/getordernotification', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1685,8 +1778,9 @@ export async function getallnotification(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallnotification', {
+        const response = await fetch('/api/getallnotification', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1706,8 +1800,9 @@ export async function calculatemenuprice() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/calculatemenuprice', {
+        const response = await fetch('/api/calculatemenuprice', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1727,8 +1822,9 @@ export async function calculatetotaltransaction() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/calculatetotaltransaction', {
+        const response = await fetch('/api/calculatetotaltransaction', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1750,8 +1846,9 @@ export async function calculaterestauranttransaction(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/calculaterestauranttransaction', {
+        const response = await fetch('/api/calculaterestauranttransaction', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1773,8 +1870,9 @@ export async function calculaterestaurantmenutransaction(userid1, userid2) {
         userid2: userid2
     }
     try {
-        const response = await fetch('http://localhost:3001/api/calculaterestaurantmenutransaction', {
+        const response = await fetch('/api/calculaterestaurantmenutransaction', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1796,8 +1894,9 @@ export async function getadminlog() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getadminlog', {
+        const response = await fetch('/api/getadminlog', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1819,8 +1918,9 @@ export async function getallusers() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallusers', {
+        const response = await fetch('/api/getallusers', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1839,8 +1939,9 @@ export async function getallcustomers() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallcustomers', {
+        const response = await fetch('/api/getallcustomers', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1859,8 +1960,9 @@ export async function getallrestaurants() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallrestaurants', {
+        const response = await fetch('/api/getallrestaurants', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1879,8 +1981,9 @@ export async function getallpages() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallpages', {
+        const response = await fetch('/api/getallpages', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1899,8 +2002,9 @@ export async function getallmenu() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallmenu', {
+        const response = await fetch('/api/getallmenu', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1919,8 +2023,9 @@ export async function getallorders1() {
     const s = {
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getallorders1', {
+        const response = await fetch('/api/getallorders1', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1936,14 +2041,16 @@ export async function getallorders1() {
     }
 }
 
-export async function updatepassword(userid, password) {
+export async function updatepassword(userid, password, currentPassword) {
     const s = {
         userid: userid,
-        password: password
+        password: password,
+        currentPassword: currentPassword
     }
     try {
-        const response = await fetch('http://localhost:3001/api/updatepassword', {
+        const response = await fetch('/api/updatepassword', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1965,8 +2072,9 @@ export async function updatepost(postid, caption) {
         caption: caption
     }
     try {
-        const response = await fetch('http://localhost:3001/api/updatepost', {
+        const response = await fetch('/api/updatepost', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1988,8 +2096,9 @@ export async function getcustomertimeline(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getcustomertimeline', {
+        const response = await fetch('/api/getcustomertimeline', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -2010,8 +2119,9 @@ export async function getrestauranttimeline(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getrestauranttimeline', {
+        const response = await fetch('/api/getrestauranttimeline', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -2033,8 +2143,9 @@ export async function getpagetimeline(userid) {
         userid: userid
     }
     try {
-        const response = await fetch('http://localhost:3001/api/getpagetimeline', {
+        const response = await fetch('/api/getpagetimeline', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },

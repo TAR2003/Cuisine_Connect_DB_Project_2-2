@@ -30,8 +30,9 @@
 			username: '@' + userinput
 		};
 		try {
-			const response = await fetch('http://localhost:3001/api/username', {
+			const response = await fetch('/api/username', {
 				method: 'POST',
+				credentials: 'include',
 				headers: {
 					'Content-Type': 'application/json'
 				},
@@ -81,8 +82,9 @@
 			formData.append('coverPhoto', coverPhoto);
 
 			try {
-				const response = await fetch('http://localhost:3001/save-data', {
+				const response = await fetch('/save-data', {
 					method: 'POST',
+					credentials: 'include',
 					body: formData
 				});
 
@@ -110,8 +112,9 @@
 			username: u
 		};
 		try {
-			const response = await fetch('http://localhost:3001/api/username', {
+			const response = await fetch('/api/username', {
 				method: 'POST',
+				credentials: 'include',
 				headers: {
 					'Content-Type': 'application/json'
 				},
