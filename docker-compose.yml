@@ -1,0 +1,42 @@
+services:
+  oracle:
+    build:
+      context: .
+      dockerfile: docker/oracle/Dockerfile
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:?Set ORACLE_PASSWORD in .env}
+      APP_USER: ${ORACLE_USER:-cuisine}
+      APP_USER_PASSWORD: ${ORACLE_PASSWORD:?Set ORACLE_PASSWORD in .env}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 20s
+      timeout: 10s
+      retries: 60
+      start_period: 300s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      oracle:
+        condition: service_healthy
+    environment:
+      ORACLE_USER: ${ORACLE_USER:-cuisine}
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:?Set ORACLE_PASSWORD in .env}
+      ORACLE_CONNECT_STRING: oracle:1521/XEPDB1
+      PORT: 3001
+      SEED_PASSWORD: ${SEED_PASSWORD:?Set SEED_PASSWORD in .env}
+      COOKIE_SECURE: "false"
+    ports:
+      - "3001:3001"
+    volumes:
+      - uploads:/app/backend/uploads
+
+volumes:
+  oracle-data:
+  uploads:

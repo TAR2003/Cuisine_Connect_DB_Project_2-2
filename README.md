@@ -46,6 +46,24 @@ node server.js
 
 When `frontend/build` exists, Express serves that static app and the API on `PORT`. The SvelteKit build is a client-side app (`ssr` is off, with an `index.html` fallback).
 
+## Docker
+
+Docker Compose runs Oracle Express 21 and the app. The database container is empty until its first start, when it applies `database/rebuild/` and the app seeds one admin, one customer, one restaurant, and one menu. Give the database container about 2 GB of memory. The first start takes several minutes.
+
+```text
+copy .env.example .env
+```
+
+Set `ORACLE_PASSWORD` and `SEED_PASSWORD` in that file. `ORACLE_USER` defaults to `cuisine`. These values stay in `.env` and are not written into the image. The sign-in names are `@admin`, `@customer`, and `@restaurant`, and each uses `SEED_PASSWORD`.
+
+```text
+docker compose up --build
+```
+
+Open `http://localhost:3001`. Oracle listens on port 1521, service `XEPDB1`. Uploads are stored in the `uploads` volume.
+
+`docker compose down` keeps the database. `docker compose down -v` deletes it. The next start loads the schema again.
+
 ## Schema
 
 `database/rebuild/ORDER.md` lists the destructive scripts in order: drop, tables, indexes, sequences, routines, then `node seed.js`. Seed inserts one admin, one customer, one restaurant, and one menu, using a bcrypt hash of `SEED_PASSWORD`. If Oracle is not configured, the seed step does not connect.
